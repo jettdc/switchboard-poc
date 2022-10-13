@@ -1,26 +1,24 @@
 switchboard:
     server:
         port: 8080
-
     pubsub:
         connection-string: 'redis://user:password@localhost:6578'
 
     routes:
         route-1:
-            endpoint: /api/ws/test
-            topic: /test
+            endpoint: "/api/ws/test"
+            topic: "/test"
             plugins:
                 middleware:
-                    - ./plugins/auth.so
+                    - "./plugins/auth.so"
                 message-enrichment:
-                    - ./plugins/enrich-pizza.so
-
+                    - "./plugins/enrich-pizza.so"
         route-2:
-            endpoint: /api/ws/cool-endpoint/{id}/orders
-            topic: /cool-topic/{id}/orders
+            endpoint: '/api/ws/cool-endpoint/{id}/orders'
+            topic: "/cool-topic/{id}/orders"
             plugins:
                 middleware:
-                    - ./plugins/auth.so
-                    - ./plugins/awesome-middleware.so
+                    - "./plugins/auth.so"
+                    - "./plugins/awesome-middleware.so"
                 message-enrichment:
-                    - ./plugins/enrich-pizza.so
+                    - "./plugins/enrich-pizza.so"
