@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jettdc/switchboard/config"
 	"github.com/jettdc/switchboard/pubsub"
@@ -13,21 +14,35 @@ func NewRoutePipeline(route config.RouteConfig) gin.HandlerFunc {
 		// TODO: Route messages through any middleware if it exists
 
 		// TODO: Should validate topic before, when loading in config?
-		parameterizedTopic, err := ParameterizeTopic(route.Topic, c.Params)
-		if err != nil {
-			c.Writer.WriteHeader(500)
-			c.Writer.WriteString("Invalid pubsub path.")
-			c.Done()
-			return
-		}
 
 		ctx, cancelFunc := context.WithCancel(context.Background())
-		messages, err := pubsub.Redis.Subscribe(ctx, parameterizedTopic)
-		if err != nil {
-			cancelFunc()
-			c.Writer.WriteHeader(500)
-			c.Writer.WriteString("Failed to subscribe to redis topic.")
-			c.Done()
+		allMessages := make(chan pubsub.Message, 8)
+
+		// route all target topic messages into a single channel
+		for _, topic := range route.Topics {
+			parameterizedTopic, err := ParameterizeTopic(topic, c.Params)
+			if err != nil {
+				cancelFunc()
+				c.Writer.WriteHeader(500)
+				c.Writer.WriteString("Invalid pubsub path.")
+				c.Done()
+				return
+			}
+
+			topicMessages, err := pubsub.Redis.Subscribe(ctx, parameterizedTopic)
+			if err != nil {
+				cancelFunc()
+				c.Writer.WriteHeader(500)
+				c.Writer.WriteString("Failed to subscribe to redis topic.")
+				c.Done()
+			}
+
+			// demux messages
+			go func() {
+				for msg := range topicMessages {
+					allMessages <- msg
+				}
+			}()
 		}
 
 		// Upgrade request to websocket connection
@@ -37,6 +52,7 @@ func NewRoutePipeline(route config.RouteConfig) gin.HandlerFunc {
 			c.Writer.WriteString("Failed to upgrade connection to websocket.")
 			c.Done()
 			cancelFunc()
+			close(allMessages)
 			return
 		}
 
@@ -46,6 +62,7 @@ func NewRoutePipeline(route config.RouteConfig) gin.HandlerFunc {
 				_, _, err = wsConnection.ReadMessage()
 				if err != nil {
 					cancelFunc()
+					close(allMessages)
 					return
 				}
 			}
@@ -55,10 +72,16 @@ func NewRoutePipeline(route config.RouteConfig) gin.HandlerFunc {
 		go func() {
 			for {
 				select {
-				case msg := <-messages:
+				case msg := <-allMessages:
 					// TODO route incoming messages through enrichment plugins, if any
-					wsConnection.WriteJSON(msg)
+					j, err := msg.String()
+					if err != nil {
+						fmt.Printf("Error converting pubsub message to json.")
+					}
+
+					wsConnection.WriteJSON(j)
 				case <-ctx.Done():
+					close(allMessages)
 					return
 				}
 			}

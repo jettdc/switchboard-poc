@@ -15,7 +15,7 @@ type PubSubConfig struct {
 
 type RouteConfig struct {
 	Endpoint string        `yaml:"endpoint"`
-	Topic    string        `yaml:"topic"`
+	Topics   []string      `yaml:"topics"`
 	Plugins  PluginsConfig `yaml:"plugins,omitempty"`
 }
 

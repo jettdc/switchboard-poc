@@ -51,9 +51,9 @@ func (r *RedisConnection) Connect() error {
 	return nil
 }
 
-func (r *RedisConnection) Subscribe(ctx context.Context, topic string) (chan string, error) {
+func (r *RedisConnection) Subscribe(ctx context.Context, topic string) (chan Message, error) {
 	log.Printf("Subscribing to redis topic %s", topic)
-	messages := make(chan string, 8)
+	messages := make(chan Message, 8)
 
 	go func() {
 		// TODO: Only psubscribe if *?
@@ -64,16 +64,11 @@ func (r *RedisConnection) Subscribe(ctx context.Context, topic string) (chan str
 			case <-ctx.Done():
 				return
 			case msg := <-pubsub.Channel():
-				packedMessage, err := PubSubMessage{
+				packedMessage := Message{
 					msg.Channel,
 					msg.Payload,
-				}.String()
-				if err != nil {
-					log.Println(err)
-					continue
 				}
 
-				// TODO: Enrich messages
 				messages <- packedMessage
 			}
 		}

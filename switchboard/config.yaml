@@ -2,7 +2,9 @@ server:
   port: 8080
 routes:
   - endpoint: "/api/ws/test"
-    topic: "/test"
+    topics:
+      - "/test/orders"
+      - "/test/status"
     plugins:
       middleware:
         - "./plugins/auth.so"
@@ -10,7 +12,8 @@ routes:
         - "./plugins/enrich-pizza.so"
 
   - endpoint: '/api/ws/cool-endpoint/:id/orders'
-    topic: "/cool-topic/*/orders"
+    topics:
+      - "/cool-topic/*/orders"
     plugins:
       middleware:
         - "./plugins/auth.so"

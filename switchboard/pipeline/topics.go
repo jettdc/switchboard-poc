@@ -7,7 +7,6 @@ import (
 )
 
 func ParameterizeTopic(topic string, wildcards gin.Params) (string, error) {
-	fmt.Printf("Parameterizeing %s", topic)
 	var parameterizedTopic = topic
 	wildcard, i, valid := findWildcard(topic)
 
@@ -39,7 +38,7 @@ func ParameterizeTopic(topic string, wildcards gin.Params) (string, error) {
 	return parameterizedTopic, nil
 }
 
-// From gin github
+// From gin github, adapted to not accept * characters as wildcards
 // Search for a wildcard segment and check the name for invalid characters.
 // Returns -1 as index, if no wildcard was found.
 func findWildcard(path string) (wildcard string, i int, valid bool) {
