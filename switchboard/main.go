@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jettdc/switchboard/config"
 	"github.com/jettdc/switchboard/pipeline"
+	"github.com/jettdc/switchboard/pubsub"
 	"log"
 )
 
@@ -14,7 +15,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// TODO: Try to connect to redis
+	pubsubClient, err := pubsub.GetPubSubClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = pubsubClient.Connect()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	server := gin.Default()
 
@@ -26,4 +35,5 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to start gin server.")
 	}
+
 }

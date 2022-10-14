@@ -2,7 +2,6 @@ package config
 
 type Config struct {
 	Server ServerConfig  `yaml:"server"`
-	PubSub PubSubConfig  `yaml:"pubsub"`
 	Routes []RouteConfig `yaml:"routes"`
 }
 

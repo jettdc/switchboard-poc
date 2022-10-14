@@ -1,7 +1,5 @@
 server:
   port: 8080
-pubsub:
-  connection-string: 'redis://user:password@localhost:6578'
 routes:
   - endpoint: "/api/ws/test"
     topic: "/test"
@@ -12,7 +10,7 @@ routes:
         - "./plugins/enrich-pizza.so"
 
   - endpoint: '/api/ws/cool-endpoint/:id/orders'
-    topic: "/cool-topic/{id}/orders"
+    topic: "/cool-topic/*/orders"
     plugins:
       middleware:
         - "./plugins/auth.so"
