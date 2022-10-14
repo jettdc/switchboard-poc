@@ -25,6 +25,7 @@ You will need to ensure that any plugins that you've specified actually exist.
   - If someone subscribes to a channel and there have been messages sent before the connection, send those messages before sending any new messages. 
 - Environment variables for pubsub connection
 - Secure websockets
+- Health check
 
 ## Backend Services
 ### Setup
