@@ -35,8 +35,16 @@ func validateConfig(config *Config) error {
 		return fmt.Errorf("missing required fields in config file")
 	}
 
-	// Make sure that specified plugins exist and are valid
 	for _, route := range config.Routes {
+		// Make sure route parameterization is OK
+		for _, topic := range route.Topics {
+			if err := ValidateTopic(topic); err != nil {
+				fmt.Println(topic)
+				return err
+			}
+		}
+
+		// Make sure that specified plugins exist and are valid
 		if !structs.IsZero(route.Plugins) {
 			if err := validatePlugins(route.Plugins); err != nil {
 				return err

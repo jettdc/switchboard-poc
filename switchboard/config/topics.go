@@ -1,4 +1,4 @@
-package pipeline
+package config
 
 import (
 	"fmt"
@@ -36,6 +36,26 @@ func ParameterizeTopic(topic string, wildcards gin.Params) (string, error) {
 		wildcard, i, valid = findWildcard(parameterizedTopic)
 	}
 	return parameterizedTopic, nil
+}
+
+// Parameterize topic with placeholders to see if there's any errors.
+func ValidateTopic(topic string) error {
+	var parameterizedTopic = topic
+	wildcard, i, valid := findWildcard(topic)
+
+	// Parameterize each wildcard in the topic until there are no more
+	for i != -1 {
+		if !valid {
+			return fmt.Errorf("invalid wildcards found in topic: %s", topic)
+		}
+
+		parameterizedTopic = strings.Replace(parameterizedTopic, wildcard, "VALID_PARAM", 1)
+
+		// Find the next
+		wildcard, i, valid = findWildcard(parameterizedTopic)
+	}
+
+	return nil
 }
 
 // From gin github, adapted to not accept * characters as wildcards

@@ -20,14 +20,8 @@ func NewRoutePipeline(route config.RouteConfig) gin.HandlerFunc {
 
 		// route all target topic messages into a single channel
 		for _, topic := range route.Topics {
-			parameterizedTopic, err := ParameterizeTopic(topic, c.Params)
-			if err != nil {
-				cancelFunc()
-				c.Writer.WriteHeader(500)
-				c.Writer.WriteString("Invalid pubsub path.")
-				c.Done()
-				return
-			}
+			// Don't need to check for error, topics are validated on config load
+			parameterizedTopic, _ := config.ParameterizeTopic(topic, c.Params)
 
 			topicMessages, err := pubsub.Redis.Subscribe(ctx, parameterizedTopic)
 			if err != nil {
