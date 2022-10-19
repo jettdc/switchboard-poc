@@ -38,6 +38,7 @@ func validateConfig(config *Config) error {
 	for _, route := range config.Routes {
 		// Make sure route parameterization is OK
 		for _, topic := range route.Topics {
+			// TODO: MAke sure that this makes sense
 			if err := ValidateTopic(topic); err != nil {
 				fmt.Println(topic)
 				return err

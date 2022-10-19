@@ -13,7 +13,7 @@ routes:
 
   - endpoint: '/api/ws/cool-endpoint/:id/orders'
     topics:
-      - "/cool-topic/*/orders"
+      - "/cool-topic/:id/orders"
     plugins:
       middleware:
         - "./plugins/auth.so"

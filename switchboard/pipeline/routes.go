@@ -15,7 +15,7 @@ func NewRoutePipeline(route config.RouteConfig) gin.HandlerFunc {
 
 		// TODO: Should validate topic before, when loading in config?
 
-		ctx, cancelFunc := context.WithCancel(context.Background())
+		ctx, cancelFunc := context.WithCancel(c.Request.Context())
 		allMessages := make(chan pubsub.Message, 8)
 
 		// route all target topic messages into a single channel
