@@ -8,6 +8,7 @@ import (
 	"github.com/jettdc/switchboard/pipeline"
 	"github.com/jettdc/switchboard/pubsub"
 	"github.com/jettdc/switchboard/u"
+	"runtime"
 	"time"
 )
 
@@ -42,6 +43,16 @@ func main() {
 
 	for _, route := range switchboardConfig.Routes {
 		server.GET(route.Endpoint, pipeline.NewRoutePipeline(route))
+	}
+
+	if u.GetEnvWithDefault("ENVIRONMENT", "development") == "development" {
+		go func() {
+			for {
+				// TODO: Goroutine leak!
+				u.Logger.Debug(fmt.Sprintf("%d running goroutines", runtime.NumGoroutine()))
+				time.Sleep(1 * time.Second)
+			}
+		}()
 	}
 
 	err = server.Run(fmt.Sprintf("localhost:%d", switchboardConfig.Server.Port))
