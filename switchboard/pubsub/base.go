@@ -10,7 +10,7 @@ import (
 // SubscriptionRoutine is used to subscribe to a topic and pass along messages
 // It is only called on the first request for a subscription, and is told finish when the last
 // listener indicates that they are finished.
-type SubscriptionRoutine = func(topic string, doneChannel <-chan bool, messages chan<- Message, ctx context.Context)
+type SubscriptionRoutine = func(topic string, doneChannel <-chan bool, messages chan<- Message, subscriptionDone chan<- bool, ctx context.Context)
 
 // Handles the logic for only making one network subscription to the pubsub, but multiplexing all the messages
 // from that subscription to all listeners.
@@ -52,10 +52,11 @@ func baseSubscribe(ctx context.Context, topic string, subscriptionRoutine Subscr
 	if firstSubscriptionToTopic {
 
 		messagesFromSubscription := make(chan Message, 8)
+		subscriptionDone := make(chan bool, 1)
 		ctx := context.Background()
 
 		// Handle the actual network subscription
-		go subscriptionRoutine(topic, doneChannel, messagesFromSubscription, ctx)
+		go subscriptionRoutine(topic, doneChannel, messagesFromSubscription, subscriptionDone, ctx)
 
 		// Multiplex messages
 		go func() {
@@ -63,6 +64,8 @@ func baseSubscribe(ctx context.Context, topic string, subscriptionRoutine Subscr
 				select {
 				case msg := <-messagesFromSubscription:
 					SendMessageToAllListeners(msg, topic)
+				case <-subscriptionDone:
+					return
 				case <-ctx.Done():
 					return
 				}

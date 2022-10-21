@@ -2,6 +2,7 @@ package u
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -16,7 +17,7 @@ func InternalServerError(msg string, params ...any) HttpError {
 	return HttpError{
 		errors.New(http.StatusText(http.StatusInternalServerError)),
 		http.StatusInternalServerError,
-		msg,
+		fmt.Sprintf(msg, params),
 	}
 }
 

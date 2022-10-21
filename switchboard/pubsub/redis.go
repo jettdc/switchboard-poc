@@ -54,7 +54,7 @@ func (r *RedisConnection) Subscribe(ctx context.Context, topic string) (chan Mes
 	return baseSubscribe(ctx, topic, redisSubscriptionRoutine)
 }
 
-func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages chan<- Message, ctx context.Context) {
+func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages chan<- Message, subscriptionDone chan<- bool, ctx context.Context) {
 	pubsub := Redis.Client.PSubscribe(ctx, topic)
 	defer pubsub.Close()
 
@@ -62,6 +62,7 @@ func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages ch
 		select {
 		case <-doneChannel:
 			u.Logger.Debug(fmt.Sprintf("No more listeners on topic %s. Unsubscribing.", topic))
+			subscriptionDone <- true
 			return
 		case msg := <-pubsub.Channel():
 			packedMessage := Message{
