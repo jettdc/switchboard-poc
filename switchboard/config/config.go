@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/fatih/structs"
+	"github.com/jettdc/switchboard/u"
 	"gopkg.in/yaml.v3"
 	"os"
 )
@@ -25,6 +26,8 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
+	u.Logger.Info("Successfully loaded the switchboard config.")
+
 	return config, nil
 }
 
@@ -40,7 +43,6 @@ func validateConfig(config *Config) error {
 		for _, topic := range route.Topics {
 			// TODO: MAke sure that this makes sense
 			if err := ValidateTopic(topic); err != nil {
-				fmt.Println(topic)
 				return err
 			}
 		}

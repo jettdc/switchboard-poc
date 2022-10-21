@@ -18,3 +18,6 @@
 
 switchboard/plugins
 switchboard/config.yaml
+
+gazer.yaml
+switchboard/scripts

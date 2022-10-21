@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/jettdc/switchboard/common"
-	"log"
+	"github.com/jettdc/switchboard/u"
 	"strconv"
 	"time"
 )
@@ -17,22 +16,22 @@ type RedisConnection struct {
 var Redis = &RedisConnection{}
 
 func (r *RedisConnection) Connect() error {
-	log.Println("Connecting to Redis")
+	u.Logger.Info("Connecting to Redis")
 
 	// Already connected
 	if Redis.Client != nil {
 		return nil
 	}
 
-	dbEnv := common.GetEnvWithDefault("REDIS_DATABASE_NUMBER", "0")
+	dbEnv := u.GetEnvWithDefault("REDIS_DATABASE_NUMBER", "0")
 	dbNo, err := strconv.Atoi(dbEnv)
 	if err != nil {
 		return fmt.Errorf("invalid redis database number: must be integer")
 	}
 
 	Redis.Client = redis.NewClient(&redis.Options{
-		Addr:     common.GetEnvWithDefault("REDIS_ADDRESS", "localhost:6379"),
-		Password: common.GetEnvWithDefault("REDIS_PASSWORD", ""),
+		Addr:     u.GetEnvWithDefault("REDIS_ADDRESS", "localhost:6379"),
+		Password: u.GetEnvWithDefault("REDIS_PASSWORD", ""),
 		DB:       dbNo,
 	})
 
@@ -46,19 +45,21 @@ func (r *RedisConnection) Connect() error {
 		}
 	}
 
-	log.Println("Successfully connected to Redis.")
+	u.Logger.Info("Successfully connected to Redis.")
 
 	return nil
 }
 
 func (r *RedisConnection) Subscribe(ctx context.Context, topic string) (chan Message, error) {
-	log.Printf("Subscribing to redis topic %s", topic)
+	u.Logger.Debug(fmt.Sprintf("Subscribing to redis topic %s", topic))
 	messages := make(chan Message, 8)
 
 	go func() {
-		// TODO: Only psubscribe if *?
 		pubsub := Redis.Client.PSubscribe(ctx, topic)
+		
 		defer pubsub.Close()
+		defer u.Logger.Debug(fmt.Sprintf("Unsubscribing from redis topic %s", topic))
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -72,7 +73,6 @@ func (r *RedisConnection) Subscribe(ctx context.Context, topic string) (chan Mes
 				messages <- packedMessage
 			}
 		}
-
 	}()
 
 	return messages, nil

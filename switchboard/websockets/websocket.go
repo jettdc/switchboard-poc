@@ -16,13 +16,5 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) (*websocket.Conn, 
 		return nil, err
 	}
 
-	// Close the ws connection when the request finishes or fails
-	go func() {
-		select {
-		case <-r.Context().Done():
-			//conn.Close()
-		}
-	}()
-
 	return conn, nil
 }

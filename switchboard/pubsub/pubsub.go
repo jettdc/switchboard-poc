@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/jettdc/switchboard/common"
+	"github.com/jettdc/switchboard/u"
 )
 
 type PubSub interface {
@@ -26,9 +26,10 @@ func (p Message) String() (string, error) {
 }
 
 func GetPubSubClient() (PubSub, error) {
-	provider := common.GetEnvWithDefault("PUBSUB_PROVIDER", "redis")
+	provider := u.GetEnvWithDefault("PUBSUB_PROVIDER", "redis")
 	switch provider {
 	case "redis":
+		u.Logger.Info("Switchboard configured to use redis as pubsub provider.")
 		return Redis, nil
 	default:
 		return nil, fmt.Errorf("cannot find pubsub provider with name %s", provider)

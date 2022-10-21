@@ -2,30 +2,39 @@ package main
 
 import (
 	"fmt"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/jettdc/switchboard/config"
 	"github.com/jettdc/switchboard/pipeline"
 	"github.com/jettdc/switchboard/pubsub"
-	"log"
+	"github.com/jettdc/switchboard/u"
+	"time"
 )
 
 func main() {
+	if err := u.InitializeLogger(u.GetEnvWithDefault("ENVIRONMENT", "development")); err != nil {
+		panic("Failed to initialize logger.")
+	}
+
 	switchboardConfig, err := config.LoadConfig("./config.yaml")
 	if err != nil {
-		log.Fatal(err)
+		u.Logger.Error(err.Error())
 	}
 
 	pubsubClient, err := pubsub.GetPubSubClient()
 	if err != nil {
-		log.Fatal(err)
+		u.Logger.Fatal(err.Error())
 	}
 
 	err = pubsubClient.Connect()
 	if err != nil {
-		log.Fatal(err)
+		u.Logger.Fatal(err.Error())
 	}
 
-	server := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	server := gin.New()
+	server.Use(ginzap.Ginzap(u.Logger.ZapLogger, time.RFC3339, true))
+	server.Use(ginzap.RecoveryWithZap(u.Logger.ZapLogger, true))
 
 	for _, route := range switchboardConfig.Routes {
 		server.GET(route.Endpoint, pipeline.NewRoutePipeline(route))
@@ -33,7 +42,7 @@ func main() {
 
 	err = server.Run(fmt.Sprintf("localhost:%d", switchboardConfig.Server.Port))
 	if err != nil {
-		log.Fatal("Failed to start gin server.")
+		u.Logger.Fatal("Failed to start gin server.")
 	}
 
 }
