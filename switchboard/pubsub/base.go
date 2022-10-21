@@ -2,9 +2,6 @@ package pubsub
 
 import (
 	"context"
-	"fmt"
-	"github.com/google/uuid"
-	"github.com/jettdc/switchboard/u"
 )
 
 // SubscriptionRoutine is used to subscribe to a topic and pass along messages
@@ -14,64 +11,22 @@ type SubscriptionRoutine = func(topic string, doneChannel <-chan bool, messages 
 
 // Handles the logic for only making one network subscription to the pubsub, but multiplexing all the messages
 // from that subscription to all listeners.
-func baseSubscribe(ctx context.Context, topic string, subscriptionRoutine SubscriptionRoutine) (chan Message, error) {
-	// If a subscription already exists, listen, otherwise make one
-	listenerId := uuid.NewString()
-
-	var messages chan Message
-	var doneChannel chan bool
-	firstSubscriptionToTopic := false
-
-	// Someone has already initiated a subscription, so just listen to it
-	if existingMessageChannel, killSubscription, err := ListenToExistingSubscription(listenerId, topic); err == nil {
-		u.Logger.Debug(fmt.Sprintf("Listening on existing topic subscription to %s", topic))
-		messages = existingMessageChannel
-		doneChannel = killSubscription
-
-		// We are the first to subscribe, so create a new subscription
-	} else {
-		u.Logger.Debug(fmt.Sprintf("Subscribing to topic %s", topic))
-		messages, doneChannel = CreateSubscriptionListener(listenerId, topic)
-		firstSubscriptionToTopic = true
-	}
+func baseSubscribe(ctx context.Context, topic string, lgh ListenGroupHandler, subscriptionRoutine SubscriptionRoutine) (chan Message, error) {
+	listenerId := NewListenerId()
+	incomingMessages, doneChannel, firstSubscriptionToTopic := GetListenGroup(lgh, listenerId, topic)
 
 	// Stop listening when done
 	// Note that if we are the last listener, then a message is sent to the doneChannel
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				numListening, _ := StopListeningToExistingSubscription(listenerId, topic)
-				u.Logger.Debug(fmt.Sprintf("No longer listening on topic %s. %d listeners remain.", topic, numListening))
-				return
-			}
-		}
-	}()
+	go LeaveListenGroupOnCtxDone(ctx, lgh, listenerId, topic)
 
-	// Only subscribe if no existing subscriptions
 	if firstSubscriptionToTopic {
-
-		messagesFromSubscription := make(chan Message, 8)
-		subscriptionDone := make(chan bool, 1)
 		ctx := context.Background()
+		messagesFromSubscription, subscriptionDone := make(chan Message, 8), make(chan bool, 1)
 
-		// Handle the actual network subscription
+		// Handle the actual network subscription + forward incoming messages to everyone in the group
 		go subscriptionRoutine(topic, doneChannel, messagesFromSubscription, subscriptionDone, ctx)
-
-		// Multiplex messages
-		go func() {
-			for {
-				select {
-				case msg := <-messagesFromSubscription:
-					SendMessageToAllListeners(msg, topic)
-				case <-subscriptionDone:
-					return
-				case <-ctx.Done():
-					return
-				}
-			}
-		}()
+		go MultiplexMessages(ctx, lgh, topic, messagesFromSubscription, subscriptionDone)
 	}
 
-	return messages, nil
+	return incomingMessages, nil
 }

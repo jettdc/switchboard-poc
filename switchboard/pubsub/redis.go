@@ -10,10 +10,11 @@ import (
 )
 
 type RedisConnection struct {
-	Client *redis.Client
+	Client                    *redis.Client
+	subscriptionListenHandler ListenGroupHandler
 }
 
-var Redis = &RedisConnection{}
+var Redis = &RedisConnection{nil, NewStdListenGroupHandler()}
 
 func (r *RedisConnection) Connect() error {
 	u.Logger.Info("Connecting to Redis")
@@ -51,7 +52,7 @@ func (r *RedisConnection) Connect() error {
 }
 
 func (r *RedisConnection) Subscribe(ctx context.Context, topic string) (chan Message, error) {
-	return baseSubscribe(ctx, topic, redisSubscriptionRoutine)
+	return baseSubscribe(ctx, topic, r.subscriptionListenHandler, redisSubscriptionRoutine)
 }
 
 func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages chan<- Message, subscriptionDone chan<- bool, ctx context.Context) {
