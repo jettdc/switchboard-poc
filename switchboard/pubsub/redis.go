@@ -51,29 +51,25 @@ func (r *RedisConnection) Connect() error {
 }
 
 func (r *RedisConnection) Subscribe(ctx context.Context, topic string) (chan Message, error) {
-	u.Logger.Debug(fmt.Sprintf("Subscribing to redis topic %s", topic))
-	messages := make(chan Message, 8)
+	return baseSubscribe(ctx, topic, redisSubscriptionRoutine)
+}
 
-	go func() {
-		pubsub := Redis.Client.PSubscribe(ctx, topic)
-		
-		defer pubsub.Close()
-		defer u.Logger.Debug(fmt.Sprintf("Unsubscribing from redis topic %s", topic))
+func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages chan<- Message, ctx context.Context) {
+	pubsub := Redis.Client.PSubscribe(ctx, topic)
+	defer pubsub.Close()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case msg := <-pubsub.Channel():
-				packedMessage := Message{
-					msg.Channel,
-					msg.Payload,
-				}
-
-				messages <- packedMessage
+	for {
+		select {
+		case <-doneChannel:
+			u.Logger.Debug(fmt.Sprintf("No more listeners on topic %s. Unsubscribing.", topic))
+			return
+		case msg := <-pubsub.Channel():
+			packedMessage := Message{
+				msg.Channel,
+				msg.Payload,
 			}
-		}
-	}()
 
-	return messages, nil
+			messages <- packedMessage
+		}
+	}
 }

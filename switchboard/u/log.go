@@ -83,6 +83,8 @@ func getLogLevelFromEnv(environment string) (zapcore.Level, error) {
 	switch environment {
 	case "development":
 		return zap.DebugLevel, nil
+	case "production":
+		return zap.InfoLevel, nil
 	default:
 		return -1, fmt.Errorf("invalid environment, cannot deduce log level")
 	}

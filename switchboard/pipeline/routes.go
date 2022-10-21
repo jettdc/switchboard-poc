@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/jettdc/switchboard/config"
@@ -38,7 +39,7 @@ func NewRoutePipeline(route config.RouteConfig) gin.HandlerFunc {
 
 		// Cancel our context if there's a websocket error and continuously write incoming messages to ws
 		go cancelCtxOnWSErr(wsConnection, cancelFunc)
-		go writeMessagesToWS(allMessages, wsConnection, ctx)
+		go writeMessagesToWS(allMessages, wsConnection, c.Request.URL.Path, ctx)
 
 		return
 	}
@@ -46,6 +47,8 @@ func NewRoutePipeline(route config.RouteConfig) gin.HandlerFunc {
 
 // Subscribe to a topic and forward all messages to the single channel
 func listenOnTopic(topic string, params gin.Params, allMessages chan pubsub.Message, ctx context.Context) error {
+	// TODO: Only subscribe if not already subscribed, otherwise tap into the message stream
+
 	// /example/topic/:id -> /example/topic/3
 	// Don't need to check for error, topics are validated on config load
 	parameterizedTopic, _ := config.ParameterizeTopic(topic, params)
@@ -79,7 +82,7 @@ func cancelCtxOnWSErr(wsConnection *websocket.Conn, cancelFunc context.CancelFun
 	}
 }
 
-func writeMessagesToWS(messages chan pubsub.Message, wsConnection *websocket.Conn, ctx context.Context) {
+func writeMessagesToWS(messages chan pubsub.Message, wsConnection *websocket.Conn, path string, ctx context.Context) {
 	for {
 		select {
 		case msg := <-messages:
@@ -91,6 +94,7 @@ func writeMessagesToWS(messages chan pubsub.Message, wsConnection *websocket.Con
 
 			wsConnection.WriteJSON(j)
 		case <-ctx.Done():
+			u.Logger.Info(fmt.Sprintf("Client disconnected from websocket at %s.", path))
 			wsConnection.Close()
 			return
 		}

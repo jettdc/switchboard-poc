@@ -2,8 +2,17 @@ package u
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"os"
 )
+
+func InitializeEnv(envFile string) error {
+	err := godotenv.Load(envFile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func ValidateRequiredEnv(variables []string) error {
 	for _, variable := range variables {

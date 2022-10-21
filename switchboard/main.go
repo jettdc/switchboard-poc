@@ -12,6 +12,10 @@ import (
 )
 
 func main() {
+	if err := u.InitializeEnv("./.env"); err != nil {
+		panic("Failed to load env file.")
+	}
+
 	if err := u.InitializeLogger(u.GetEnvWithDefault("ENVIRONMENT", "development")); err != nil {
 		panic("Failed to initialize logger.")
 	}
