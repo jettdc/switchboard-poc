@@ -26,6 +26,10 @@ func ValidateRequiredEnv(variables []string) error {
 func GetEnvWithDefault(name, defaultValue string) string {
 	res, exists := os.LookupEnv(name)
 	if !exists {
+		msg := fmt.Sprintf("env lookup for value \"%s\" failed. Using default value: \"%s\"", name, defaultValue)
+		if Logger != nil {
+			Logger.Warn(msg)
+		}
 		return defaultValue
 	}
 	return res

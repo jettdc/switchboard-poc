@@ -4,6 +4,31 @@
 To find todo items, search the project for `// TODO:` comments
 
 ## Switchboard Core
+
+### Config
+```yaml
+server:
+  host: <string>
+  port: <int>
+  pubsub:
+    provider: redis # currently the only supported provider
+  ssl: <optional> # if not present, serves on http
+    mode: <none | auto | manual>
+    cert: <string, optional> # path, required for manual mode
+    key:  <string, optional> # path, required for manual mode
+  env-file: <string, optional> # path to .env
+routes:
+  - endpoint: <string> # rest endpoint for initiating the websocket, e.g. "/api/ws/customers/:id/orders"
+    topics:
+      - <string> # topics to subscribe to on pubsub provider, e.g. "/customers/:id/orders"
+    plugins: <optional>
+      middleware: <optional>
+        - <string> # path to go plugin file (.so)
+      message-enrichment: <optional>
+        - <string> # path to go plugin file (.so)
+
+```
+
 ### Setup
 In the `/switchboard` directory
 - `go get`

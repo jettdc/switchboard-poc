@@ -13,10 +13,6 @@ import (
 )
 
 func main() {
-	if err := u.InitializeEnv("./.env"); err != nil {
-		panic("Failed to load env file.")
-	}
-
 	if err := u.InitializeLogger(u.GetEnvWithDefault("ENVIRONMENT", "development")); err != nil {
 		panic("Failed to initialize logger.")
 	}
@@ -26,7 +22,13 @@ func main() {
 		u.Logger.Fatal(err.Error())
 	}
 
-	pubsubClient, err := pubsub.GetPubSubClient()
+	if switchboardConfig.Server.EnvFile != "" {
+		if err := u.InitializeEnv(switchboardConfig.Server.EnvFile); err != nil {
+			u.Logger.Fatal(fmt.Sprintf("Failed to load env file at path \"%s\"", switchboardConfig.Server.EnvFile))
+		}
+	}
+
+	pubsubClient, err := pubsub.GetPubSubClient(switchboardConfig.Server.Pubsub.Provider)
 	if err != nil {
 		u.Logger.Fatal(err.Error())
 	}

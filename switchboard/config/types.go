@@ -6,13 +6,15 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Host string     `yaml:"host"`
-	Port uint32     `yaml:"port"`
-	SSL  *SSLConfig `yaml:"ssl,omitempty"`
+	Host    string       `yaml:"host"`
+	Port    uint32       `yaml:"port"`
+	Pubsub  PubSubConfig `yaml:"pubsub"`
+	SSL     *SSLConfig   `yaml:"ssl,omitempty"`
+	EnvFile string       `yaml:"env-file"`
 }
 
 type PubSubConfig struct {
-	ConnectionString string `yaml:"connection-string"`
+	Provider string `yaml:"provider"`
 }
 
 type RouteConfig struct {

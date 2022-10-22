@@ -66,6 +66,10 @@ func validateServerConfig(sc ServerConfig) error {
 		return fmt.Errorf("missing host in config")
 	}
 
+	if structs.IsZero(sc.Pubsub) {
+		return fmt.Errorf("missing pubsub configuration")
+	}
+
 	if sc.SSL != nil {
 		if err := validateSSLConfig(sc.SSL); err != nil {
 			return err
