@@ -1,9 +1,18 @@
 # switchboard
+*Drop in infrastructure to forward backend pubsub messages to frontend websockets, with a robust plugin system*
 
-### TODO
-To find todo items, search the project for `// TODO:` comments
+Switchboard is a plug-and-play service for creating websocket endpoints that listen to backend pubsub topics.
+The service allows you to easily define pipelines that route backend messages to frontend clients,
+decoupling the message writers and readers, as well as removing unneeded complexity.
 
-## Switchboard Core
+If a backend service needs to provide a frontend-relevant update, they don't need to worry about handling their own 
+websocket server (which would additionally introduce various security concerns) or routing that message to another 
+custom backend service, but rather can just shoot it off to a pubsub provider and trust that it will be delivered.
+
+The plugin system allows the addition of functionality such as connection authentication, message enrichment, and missed
+message recovery.
+
+---
 
 ### Config
 ```yaml
