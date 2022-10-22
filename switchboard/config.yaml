@@ -1,5 +1,9 @@
 server:
+  host: localhost
   port: 8080
+  ssl:
+    cert: ./certs/cert.pem
+    key: ./certs/key.pem
 routes:
   - endpoint: "/api/ws/test"
     topics:

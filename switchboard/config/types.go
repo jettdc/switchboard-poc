@@ -6,7 +6,9 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Port uint32 `yaml:"port"`
+	Host string     `yaml:"host"`
+	Port uint32     `yaml:"port"`
+	SSL  *SSLConfig `yaml:"ssl,omitempty"`
 }
 
 type PubSubConfig struct {
@@ -22,4 +24,10 @@ type RouteConfig struct {
 type PluginsConfig struct {
 	MiddlewarePaths []string `yaml:"middleware"`
 	EnrichmentPaths []string `yaml:"message-enrichment"`
+}
+
+type SSLConfig struct {
+	Mode     string `yaml:"mode"`
+	CertPath string `yaml:"cert"`
+	KeyPath  string `yaml:"key"`
 }
