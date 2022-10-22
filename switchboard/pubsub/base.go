@@ -20,12 +20,12 @@ func baseSubscribe(ctx context.Context, topic string, lgh ListenGroupHandler, su
 	go LeaveListenGroupOnCtxDone(ctx, lgh, listenerId, topic)
 
 	if firstSubscriptionToTopic {
-		ctx := context.Background()
+		subscriptionCtx := context.Background()
 		messagesFromSubscription, subscriptionDone := make(chan Message, 8), make(chan bool, 1)
 
 		// Handle the actual network subscription + forward incoming messages to everyone in the group
-		go subscriptionRoutine(topic, doneChannel, messagesFromSubscription, subscriptionDone, ctx)
-		go MultiplexMessages(ctx, lgh, topic, messagesFromSubscription, subscriptionDone)
+		go subscriptionRoutine(topic, doneChannel, messagesFromSubscription, subscriptionDone, subscriptionCtx)
+		go MultiplexMessages(subscriptionCtx, lgh, topic, messagesFromSubscription, subscriptionDone)
 	}
 
 	return incomingMessages, nil
