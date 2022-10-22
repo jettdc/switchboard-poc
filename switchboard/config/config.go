@@ -32,10 +32,8 @@ func LoadConfig(path string) (*Config, error) {
 }
 
 func validateConfig(config *Config) error {
-	// Return an error if any required (fields without omitempty) fields are missing
-	hasMissingFields := structs.HasZero(config)
-	if hasMissingFields {
-		return fmt.Errorf("missing required fields in config file")
+	if err := validateServerConfig(config.Server); err != nil {
+		return err
 	}
 
 	for _, route := range config.Routes {
@@ -56,6 +54,53 @@ func validateConfig(config *Config) error {
 	}
 
 	return nil
+}
+
+func validateServerConfig(sc ServerConfig) error {
+	// Makes sure that "server" exists
+	if structs.IsZero(sc) {
+		return fmt.Errorf("invalid server configuration")
+	}
+
+	if sc.Host == "" {
+		return fmt.Errorf("missing host in config")
+	}
+
+	if sc.SSL != nil {
+		if err := validateSSLConfig(sc.SSL); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateSSLConfig(sslConfig *SSLConfig) error {
+	switch sslConfig.Mode {
+	case "", "manual":
+		if sslConfig.KeyPath == "" || sslConfig.CertPath == "" {
+			return fmt.Errorf("must provide paths to ssl cert and key files with non-automatic ssl")
+		}
+
+		if _, err := os.Stat(sslConfig.KeyPath); err != nil {
+			return fmt.Errorf("cannot find ssl key at path \"%s\"", sslConfig.KeyPath)
+		}
+
+		if _, err := os.Stat(sslConfig.CertPath); err != nil {
+			return fmt.Errorf("cannot find ssl certificate at path \"%s\"", sslConfig.CertPath)
+		}
+
+		return nil
+	case "auto":
+		if sslConfig.KeyPath != "" || sslConfig.CertPath != "" {
+			u.Logger.Warn("SSL mode configured to \"auto\" but cert or key was also provided. Defaulting to auto mode.")
+		}
+		return nil
+	case "none":
+		return nil
+	default:
+		return fmt.Errorf("invalid ssl mode \"%s\"", sslConfig.Mode)
+	}
 }
 
 func validatePlugins(pluginsConfig PluginsConfig) error {

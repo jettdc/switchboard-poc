@@ -20,7 +20,7 @@ func InitializeLogger(environment string) error {
 	if err != nil {
 		return err
 	}
-	Logger = New(os.Stderr, logLevel)
+	Logger = New(os.Stdout, logLevel)
 	return nil
 }
 
@@ -59,7 +59,8 @@ func (l *SwitchboardLogger) Info(msg string, fields ...zap.Field) {
 }
 
 func (l *SwitchboardLogger) Warn(msg string, fields ...zap.Field) {
-	l.ZapLogger.Warn(msg, fields...)
+	coloredText, _ := ColorTextByName(msg, "yellow")
+	l.ZapLogger.Warn(coloredText, fields...)
 }
 func (l *SwitchboardLogger) Error(msg string, fields ...zap.Field) {
 	l.ZapLogger.Error(msg, fields...)

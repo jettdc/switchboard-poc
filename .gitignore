@@ -23,3 +23,10 @@ gazer.yaml
 switchboard/scripts
 
 */*_mock
+
+.air.toml
+
+tmp
+
+bin
+certs
