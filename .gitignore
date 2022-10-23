@@ -16,11 +16,11 @@
 
 .idea
 
-switchboard/plugins
-switchboard/config.yaml
+plugins
+config.yaml
 
 gazer.yaml
-switchboard/scripts
+scripts
 
 
 .air.toml
