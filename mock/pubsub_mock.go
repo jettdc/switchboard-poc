@@ -6,10 +6,10 @@ package mock
 
 import (
 	context "context"
+	pubsub "github.com/jettdc/switchboard/pubsub/listen_groups"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	pubsub "github.com/jettdc/switchboard/pubsub"
 )
 
 // MockPubSub is a mock of PubSub interface.

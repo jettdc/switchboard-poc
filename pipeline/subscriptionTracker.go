@@ -4,26 +4,27 @@ import (
 	"fmt"
 )
 
-type SubscribedRoutes = map[*EndpointDesc]*PipeContext
-
-type SubscriptionTracker struct {
-	SeenEndpointDescs SubscribedRoutes
+func NewSubscriptionHandler() *SubscriptionHandler {
+	return &SubscriptionHandler{
+		tracker:             &SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)},
+		SubscribeRequests:   make(chan RouteConfigWithParams, 8),
+		UnsubscribeRequests: make(chan RouteConfigWithParams, 8),
+	}
 }
 
-// Make a new entry or return an existing
-func (t *SubscriptionTracker) TrackEndpointDesc(pipeCtx *PipeContext, desc *EndpointDesc) error {
-	if _, err := t.GetActivePipelineFromEndpointDesc(*desc); err == nil {
+func (sh *SubscriptionHandler) Track(ctx *PipeContext, desc *EndpointDesc) error {
+	if _, err := sh.GetPipeCtx(*desc); err == nil {
 		return fmt.Errorf("endpoint desc is already being handled by a pipeline")
 
 	}
 
 	// No endpoint names matched
-	t.SeenEndpointDescs[desc] = pipeCtx
+	sh.tracker.SeenEndpointDescs[desc] = ctx
 	return nil
 }
 
-func (t *SubscriptionTracker) GetActivePipelineFromEndpointDesc(desc EndpointDesc) (*PipeContext, error) {
-	for endpointDesc, pipeCtx := range t.SeenEndpointDescs {
+func (sh *SubscriptionHandler) GetPipeCtx(desc EndpointDesc) (*PipeContext, error) {
+	for endpointDesc, pipeCtx := range sh.tracker.SeenEndpointDescs {
 		if endpointDescsMatch(*endpointDesc, desc) {
 			return pipeCtx, nil
 		}
@@ -31,11 +32,11 @@ func (t *SubscriptionTracker) GetActivePipelineFromEndpointDesc(desc EndpointDes
 	return nil, fmt.Errorf("specified endpoint desc doesn't exist")
 }
 
-func (t *SubscriptionTracker) CancelAndDeleteEntry(p *PipeContext) error {
-	for ed, pc := range t.SeenEndpointDescs {
+func (t *SubscriptionHandler) CancelAndDeleteEntry(p *PipeContext) error {
+	for ed, pc := range t.tracker.SeenEndpointDescs {
 		if pc == p {
 			pc.CancelFunc()
-			delete(t.SeenEndpointDescs, ed)
+			delete(t.tracker.SeenEndpointDescs, ed)
 			return nil
 		}
 	}

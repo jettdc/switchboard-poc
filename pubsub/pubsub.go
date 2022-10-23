@@ -1,31 +1,22 @@
+// For encapsulating the pubsub provider logic to allow easy switching
 package pubsub
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/jettdc/switchboard/pubsub/listen_groups"
 	"github.com/jettdc/switchboard/u"
 	"strings"
 )
 
+// PubSub is the generic interface for interacting with various pubsub providers, such as redis.
 type PubSub interface {
 	Connect() error
-	Subscribe(ctx context.Context, topic string, listenerId string) (chan ForwardedMessage, error)
+	Subscribe(ctx context.Context, topic string, listenerId string) (chan listen_groups.ForwardedMessage, error)
 }
 
-type ForwardedMessage struct {
-	Topic   string `json:"topic"`
-	Payload string `json:"payload"`
-}
-
-func (p ForwardedMessage) String() (string, error) {
-	b, err := json.Marshal(p)
-	if err != nil {
-		return "", fmt.Errorf("invalid pubsub message json")
-	}
-	return string(b), nil
-}
-
+// GetPubSubClient matches the requested provider with the available providers, and returns an instance of it.
+// Providers must be explicitly entered into the source code
 func GetPubSubClient(provider string) (PubSub, error) {
 	switch strings.ToLower(provider) {
 	case "redis":

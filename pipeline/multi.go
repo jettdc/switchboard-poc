@@ -11,28 +11,6 @@ import (
 	"github.com/jettdc/switchboard/websockets"
 )
 
-type CommandMessage struct {
-	Action    string         `json:"action"`
-	Endpoints []EndpointDesc `json:"endpoints"`
-	RequestId *string        `json:"requestId,omitempty"`
-}
-
-type EndpointDesc struct {
-	Endpoint string             `json:"endpoint"`
-	Params   *map[string]string `json:"params,omitempty"`
-}
-
-type RouteConfigWithParams struct {
-	RouteConfig config.RouteConfig
-	Params      *map[string]string
-	RequestId   *string
-}
-
-const (
-	ActionSubscribe   string = "SUBSCRIBE"
-	ActionUnsubscribe        = "UNSUBSCRIBE"
-)
-
 func MultiHandler(switchboardConfig *config.Config, pubsubClient pubsub.PubSub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Makes sure that listen requests are idempotent through all subscribe requests
@@ -45,25 +23,22 @@ func MultiHandler(switchboardConfig *config.Config, pubsubClient pubsub.PubSub) 
 			return
 		}
 
-		subscribeRequests := make(chan RouteConfigWithParams, 8)
-		unSubscribeRequests := make(chan RouteConfigWithParams, 8)
-		subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+		subscriptionHandler := NewSubscriptionHandler()
 
-		go listenForCommands(wsConnection, switchboardConfig.Routes, subscribeRequests, unSubscribeRequests)
-		go subscribeToRouteProcessor(subscribeRequests, &subscriptionTracker, wsConnection, pubsubClient, listenerId)
-		go unsubscribeFromRouteProcessor(unSubscribeRequests, &subscriptionTracker, wsConnection)
+		go listenForCommands(wsConnection, switchboardConfig.Routes, subscriptionHandler)
+		go processCommands(subscriptionHandler, wsConnection, pubsubClient, listenerId)
 
 		return
 	}
 }
 
-func listenForCommands(wsConnection *websockets.WSConn, rcs []config.RouteConfig, sr chan RouteConfigWithParams, usr chan RouteConfigWithParams) {
+func listenForCommands(wsConnection *websockets.WSConn, rcs []config.RouteConfig, sh *SubscriptionHandler) {
 	for {
 		var command CommandMessage
 		err := wsConnection.ReadJSONSafe(&command)
 		switch err {
 		case nil:
-			go processAction(wsConnection, command, rcs, sr, usr)
+			go processAction(wsConnection, command, rcs, sh)
 		default:
 			if websocket.IsCloseError(err) || websocket.IsUnexpectedCloseError(err) {
 				wsConnection.CloseAndCancel()
@@ -75,7 +50,7 @@ func listenForCommands(wsConnection *websockets.WSConn, rcs []config.RouteConfig
 	}
 }
 
-func processAction(wsConnection *websockets.WSConn, command CommandMessage, rcs []config.RouteConfig, sr chan RouteConfigWithParams, usr chan RouteConfigWithParams) {
+func processAction(wsConnection *websockets.WSConn, command CommandMessage, rcs []config.RouteConfig, sh *SubscriptionHandler) {
 	for _, endpoint := range command.Endpoints {
 		rc, err := getRouteConfigByEndpoint(endpoint.Endpoint, rcs)
 		if err != nil {
@@ -84,14 +59,14 @@ func processAction(wsConnection *websockets.WSConn, command CommandMessage, rcs 
 		} else {
 			switch command.Action {
 			case ActionSubscribe:
-				sr <- RouteConfigWithParams{
+				sh.SubscribeRequests <- RouteConfigWithParams{
 					rc,
 					endpoint.Params,
 					command.RequestId,
 				}
 
 			case ActionUnsubscribe:
-				usr <- RouteConfigWithParams{
+				sh.UnsubscribeRequests <- RouteConfigWithParams{
 					rc,
 					endpoint.Params,
 					command.RequestId,
@@ -112,36 +87,27 @@ func getRouteConfigByEndpoint(endpoint string, rcs []config.RouteConfig) (config
 	return config.RouteConfig{}, fmt.Errorf("no route config with that endpoint")
 }
 
-func subscribeToRouteProcessor(subscribeRequests chan RouteConfigWithParams, subscriptionTracker *SubscriptionTracker, wsConnection *websockets.WSConn, pubsubClient pubsub.PubSub, listenerId string) {
+func processCommands(sh *SubscriptionHandler, wsConnection *websockets.WSConn, pubsubClient pubsub.PubSub, listenerId string) {
 	for {
 		select {
-		case rc := <-subscribeRequests:
+		case rc := <-sh.SubscribeRequests:
 			go func() {
 				ed := EndpointDesc{
 					rc.RouteConfig.Endpoint,
 					rc.Params,
 				}
 
-				if _, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(ed); err != nil { // Endoint desc already being handled by another pipeline
+				if _, err := sh.GetPipeCtx(ed); err != nil { // Endoint desc already being handled by another pipeline
 					if pipelineCtx, err := subscribeToRoute(wsConnection, rc, pubsubClient, listenerId); err != nil {
 						wsConnection.WriteJSONSafe(websockets.NewWSErrorMessage(err.Error(), rc.RequestId))
 					} else {
-						subscriptionTracker.TrackEndpointDesc(pipelineCtx, &ed)
+						sh.Track(pipelineCtx, &ed)
 					}
 				}
 			}()
-		case <-wsConnection.Ctx.Done():
-			return
-		}
-	}
-}
-
-func unsubscribeFromRouteProcessor(unsubscribeRequests chan RouteConfigWithParams, subscriptionTracker *SubscriptionTracker, wsConnection *websockets.WSConn) {
-	for {
-		select {
-		case rc := <-unsubscribeRequests:
+		case rc := <-sh.UnsubscribeRequests:
 			go func() {
-				if err := unsubscribeFromRoute(subscriptionTracker, rc); err != nil {
+				if err := unsubscribeFromRoute(sh, rc); err != nil {
 					wsConnection.WriteJSONSafe(websockets.NewWSErrorMessage(err.Error(), rc.RequestId))
 				}
 			}()
@@ -170,14 +136,14 @@ func subscribeToRoute(wsConnection *websockets.WSConn, route RouteConfigWithPara
 	return pipelineCtx, nil
 }
 
-func unsubscribeFromRoute(subscriptionTracker *SubscriptionTracker, route RouteConfigWithParams) error {
-	pipelineCtx, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(EndpointDesc{
+func unsubscribeFromRoute(sh *SubscriptionHandler, route RouteConfigWithParams) error {
+	pipelineCtx, err := sh.GetPipeCtx(EndpointDesc{
 		route.RouteConfig.Endpoint,
 		route.Params,
 	})
 	if err != nil {
 		return err
 	}
-	subscriptionTracker.CancelAndDeleteEntry(pipelineCtx)
+	sh.CancelAndDeleteEntry(pipelineCtx)
 	return nil
 }

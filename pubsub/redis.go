@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"github.com/jettdc/switchboard/pubsub/listen_groups"
 	"github.com/jettdc/switchboard/u"
 	"strconv"
 	"time"
@@ -11,10 +12,10 @@ import (
 
 type RedisConnection struct {
 	Client                    *redis.Client
-	subscriptionListenHandler ListenGroupHandler
+	subscriptionListenHandler listen_groups.ListenGroupHandler
 }
 
-var Redis = &RedisConnection{nil, NewStdListenGroupHandler()}
+var Redis = &RedisConnection{nil, listen_groups.NewStdListenGroupHandler()}
 
 func (r *RedisConnection) Connect() error {
 	u.Logger.Info("Connecting to Redis")
@@ -51,11 +52,11 @@ func (r *RedisConnection) Connect() error {
 	return nil
 }
 
-func (r *RedisConnection) Subscribe(ctx context.Context, topic string, listenerId string) (chan ForwardedMessage, error) {
+func (r *RedisConnection) Subscribe(ctx context.Context, topic string, listenerId string) (chan listen_groups.ForwardedMessage, error) {
 	return baseSubscribe(ctx, topic, r.subscriptionListenHandler, listenerId, redisSubscriptionRoutine)
 }
 
-func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages chan<- ForwardedMessage, subscriptionDone chan<- bool, ctx context.Context) {
+func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages chan<- listen_groups.ForwardedMessage, subscriptionDone chan<- bool, ctx context.Context) {
 	pubsub := Redis.Client.PSubscribe(ctx, topic)
 	defer pubsub.Close()
 
@@ -66,7 +67,7 @@ func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages ch
 			subscriptionDone <- true
 			return
 		case msg := <-pubsub.Channel():
-			packedMessage := ForwardedMessage{
+			packedMessage := listen_groups.ForwardedMessage{
 				msg.Channel,
 				msg.Payload,
 			}

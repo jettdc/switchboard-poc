@@ -1,8 +1,10 @@
-package pubsub
+package listen_groups
 
-import "fmt"
+import (
+	"fmt"
+)
 
-type StdListenGroupHandler struct {
+type stdListenGroupHandler struct {
 	listenGroups []*listenGroup
 }
 
@@ -13,11 +15,12 @@ type listenGroup struct {
 	KillSubscription chan bool
 }
 
-func NewStdListenGroupHandler() *StdListenGroupHandler {
-	return &StdListenGroupHandler{[]*listenGroup{}}
+// NewStdListenGroupHandler returns the standard implementation of [ListenGroupHandler]
+func NewStdListenGroupHandler() *stdListenGroupHandler {
+	return &stdListenGroupHandler{[]*listenGroup{}}
 }
 
-func (s *StdListenGroupHandler) CreateListenGroup(id ListenerId, topic string) (chan ForwardedMessage, chan bool) {
+func (s *stdListenGroupHandler) CreateListenGroup(id ListenerId, topic string) (chan ForwardedMessage, ListenGroupDestroyedChan) {
 	if msg, kill, err := s.JoinListenGroup(id, topic); err == nil {
 		return msg, kill
 	}
@@ -34,15 +37,14 @@ func (s *StdListenGroupHandler) CreateListenGroup(id ListenerId, topic string) (
 	return newSub.Listeners[id], newSub.KillSubscription
 }
 
-func (s *StdListenGroupHandler) JoinListenGroup(id ListenerId, topic string) (chan ForwardedMessage, chan bool, error) {
-	// TODO: Make sure not already listening...
+func (s *stdListenGroupHandler) JoinListenGroup(id ListenerId, topic string) (chan ForwardedMessage, ListenGroupDestroyedChan, error) {
 	for _, sub := range s.listenGroups {
 		if sub.Topic == topic {
 			existing, ok := sub.Listeners[id]
 			if ok {
 				return existing, sub.KillSubscription, nil
 			}
-			
+
 			sub.NumListeners += 1
 			sub.Listeners[id] = make(chan ForwardedMessage, 8)
 			return sub.Listeners[id], sub.KillSubscription, nil
@@ -52,7 +54,7 @@ func (s *StdListenGroupHandler) JoinListenGroup(id ListenerId, topic string) (ch
 
 }
 
-func (s *StdListenGroupHandler) LeaveListenGroup(id ListenerId, topic string) (int, error) {
+func (s *stdListenGroupHandler) LeaveListenGroup(id ListenerId, topic string) (int, error) {
 	for i, sub := range s.listenGroups {
 		if sub.Topic == topic {
 			sub.NumListeners -= 1
@@ -72,7 +74,7 @@ func (s *StdListenGroupHandler) LeaveListenGroup(id ListenerId, topic string) (i
 	return -1, fmt.Errorf("no subscription currently exists for the given topic")
 }
 
-func (s *StdListenGroupHandler) MessageGroup(msg ForwardedMessage, topic string) {
+func (s *stdListenGroupHandler) MessageGroup(msg ForwardedMessage, topic string) {
 	for _, sub := range s.listenGroups {
 		if sub.Topic == topic {
 			for _, msgChan := range sub.Listeners {
