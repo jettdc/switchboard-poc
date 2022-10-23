@@ -25,7 +25,6 @@ func writeMessagesToWS(pipeContext *PipeContext, wsConn *websockets.WSConn) {
 			if err != nil {
 				fmt.Printf("Error converting pubsub message to json.")
 			}
-
 			wsConn.WriteJSONSafe(j)
 		case <-wsConn.Ctx.Done():
 			u.Logger.Info(fmt.Sprintf("Client disconnected from websocket at %s.", pipeContext.ResolvedEndpoint))

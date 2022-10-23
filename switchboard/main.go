@@ -38,6 +38,13 @@ func main() {
 		u.Logger.Fatal(err.Error())
 	}
 
+	//go func() {
+	//	for {
+	//		time.Sleep(2 * time.Second)
+	//		u.Logger.Debug(fmt.Sprintf("%d", runtime.NumGoroutine()))
+	//	}
+	//}()
+
 	u.Logger.Fatal(startServer(switchboardConfig, pubsubClient).Error())
 }
 
