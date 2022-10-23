@@ -38,6 +38,79 @@ routes:
 
 ```
 
+### Dynamic Subscriptions
+For certain use cases, there may be a need to subscribe to more than one endpoint. Instead of forcing the user to open
+multiple websockets (which also would increase load on the server), switchboard provides an endpoint for dynamic 
+subscriptions.
+
+#### Establishing a Connection
+Create a websocket connection to the endpoint `/multi`
+
+#### Subscribing to Endpoints
+To subscribe to new endpoints, the client must send a message to switchboard:
+```json
+{
+  "action": "SUBSCRIBE",
+  "endpoints": [
+    {
+      "endpoint": "/your/endpoint"
+    }
+  ]
+}
+```
+
+If the operation fails, the server will respond with an error message:
+```json
+{
+  "endpoint": "/multi",
+  "messageType": "ERROR",
+  "message": {
+    "error": "No route configuration found for endpoint \"/ws/fake\""
+  }
+}
+```
+
+You can also do parameterized endpoints, like so:
+```json
+{
+  "action": "SUBSCRIBE",
+  "endpoints": [
+    {
+      "endpoint": "/your/endpoint/:id", 
+      "params": {"id":  "45"}
+    }
+  ], 
+  "requestId": "1"
+}
+```
+
+Notice that we've included an optional `requestId` in the message. If we receive a response from the server, the
+`requestId` will be the same.
+```json
+{
+  "endpoint": "/multi",
+  "messageType": "ERROR",
+  "message": {
+    "error": "No route configuration found for endpoint \"/your/endpoint/:id\""
+  },
+  "requestId": "1"
+}
+```
+
+#### Unsubscribing from Endpoints
+Unsubscribing works the same, but the action is `UNSUBSCRIBE`
+
+```json
+{
+  "action": "UNSUBSCRIBE",
+  "endpoints": [
+    {
+      "endpoint": "/your/endpoint"
+    }
+  ]
+}
+```
+
 ### Setup
 In the `/switchboard` directory
 - `go get`
