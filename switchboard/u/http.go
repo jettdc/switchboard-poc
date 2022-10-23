@@ -21,6 +21,14 @@ func InternalServerError(msg string, params ...any) HttpError {
 	}
 }
 
+func BadRequestError(msg string, params ...any) HttpError {
+	return HttpError{
+		errors.New(http.StatusText(http.StatusBadRequest)),
+		http.StatusBadRequest,
+		fmt.Sprintf(msg, params),
+	}
+}
+
 func Err(c *gin.Context, err HttpError) {
 	c.JSON(err.code, gin.H{
 		"status":  err.code,

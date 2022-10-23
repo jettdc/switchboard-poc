@@ -51,11 +51,11 @@ func (r *RedisConnection) Connect() error {
 	return nil
 }
 
-func (r *RedisConnection) Subscribe(ctx context.Context, topic string) (chan Message, error) {
-	return baseSubscribe(ctx, topic, r.subscriptionListenHandler, redisSubscriptionRoutine)
+func (r *RedisConnection) Subscribe(ctx context.Context, topic string, listenerId string) (chan ForwardedMessage, error) {
+	return baseSubscribe(ctx, topic, r.subscriptionListenHandler, listenerId, redisSubscriptionRoutine)
 }
 
-func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages chan<- Message, subscriptionDone chan<- bool, ctx context.Context) {
+func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages chan<- ForwardedMessage, subscriptionDone chan<- bool, ctx context.Context) {
 	pubsub := Redis.Client.PSubscribe(ctx, topic)
 	defer pubsub.Close()
 
@@ -66,7 +66,7 @@ func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages ch
 			subscriptionDone <- true
 			return
 		case msg := <-pubsub.Channel():
-			packedMessage := Message{
+			packedMessage := ForwardedMessage{
 				msg.Channel,
 				msg.Payload,
 			}

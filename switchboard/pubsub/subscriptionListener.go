@@ -10,18 +10,18 @@ import (
 type ListenerId = string
 
 type ListenGroupHandler interface {
-	CreateListenGroup(s ListenerId, topic string) (chan Message, chan bool)
-	JoinListenGroup(s ListenerId, topic string) (chan Message, chan bool, error)
+	CreateListenGroup(s ListenerId, topic string) (chan ForwardedMessage, chan bool)
+	JoinListenGroup(s ListenerId, topic string) (chan ForwardedMessage, chan bool, error)
 	LeaveListenGroup(s ListenerId, topic string) (int, error)
-	MessageGroup(msg Message, topic string)
+	MessageGroup(msg ForwardedMessage, topic string)
 }
 
 func NewListenerId() string {
 	return uuid.NewString()
 }
 
-func GetListenGroup(lgh ListenGroupHandler, id ListenerId, topic string) (chan Message, chan bool, bool) {
-	messages := make(chan Message, 8)
+func GetListenGroup(lgh ListenGroupHandler, id ListenerId, topic string) (chan ForwardedMessage, chan bool, bool) {
+	messages := make(chan ForwardedMessage, 8)
 	doneChannel := make(chan bool, 1)
 	firstSubscriptionToTopic := false
 	// Someone has already initiated a listen group, so join it
@@ -51,7 +51,7 @@ func LeaveListenGroupOnCtxDone(ctx context.Context, lgh ListenGroupHandler, id L
 	}
 }
 
-func MultiplexMessages(ctx context.Context, lgh ListenGroupHandler, topic string, messages <-chan Message, subscriptionDone <-chan bool) {
+func MultiplexMessages(ctx context.Context, lgh ListenGroupHandler, topic string, messages <-chan ForwardedMessage, subscriptionDone <-chan bool) {
 	for {
 		select {
 		case msg := <-messages:

@@ -22,7 +22,6 @@ switchboard/config.yaml
 gazer.yaml
 switchboard/scripts
 
-*/*_mock
 
 .air.toml
 
