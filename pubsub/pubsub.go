@@ -1,4 +1,4 @@
-// For encapsulating the pubsub provider logic to allow easy switching
+// Package pubsub is for encapsulating the pubsub provider logic to allow easy switching.
 package pubsub
 
 import (
@@ -10,6 +10,14 @@ import (
 )
 
 // PubSub is the generic interface for interacting with various pubsub providers, such as redis.
+//
+//	Connect() error
+//
+// Should connect to the pubsub provider.
+//
+//	Subscribe(ctx context.Context, topic string, listenerId string) (chan listen_groups.ForwardedMessage, error)
+//
+// Should leverage the BaseForwarder to only make a single physical connection.
 type PubSub interface {
 	Connect() error
 	Subscribe(ctx context.Context, topic string, listenerId string) (chan listen_groups.ForwardedMessage, error)

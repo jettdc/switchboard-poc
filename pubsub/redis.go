@@ -17,6 +17,10 @@ type RedisConnection struct {
 
 var Redis = &RedisConnection{nil, listen_groups.NewStdListenGroupHandler()}
 
+// Connect establishes a connection to redis, using environment variables:
+//   - REDIS_DATABASE_NUMBER (default 0)
+//   - REDIS_ADDRESS (default "localhost:6379")
+//   - REDIS_PASSWORD (default none)
 func (r *RedisConnection) Connect() error {
 	u.Logger.Info("Connecting to Redis")
 
@@ -52,8 +56,10 @@ func (r *RedisConnection) Connect() error {
 	return nil
 }
 
+// Subscribe leverages the base forwarder to only establish a single subscription to each topic. It also uses Redis'
+// PSUBSCRIBE method to allow for parameterized topics.
 func (r *RedisConnection) Subscribe(ctx context.Context, topic string, listenerId string) (chan listen_groups.ForwardedMessage, error) {
-	return baseSubscribe(ctx, topic, r.subscriptionListenHandler, listenerId, redisSubscriptionRoutine)
+	return listen_groups.BaseForwarder(ctx, topic, r.subscriptionListenHandler, listenerId, redisSubscriptionRoutine)
 }
 
 func redisSubscriptionRoutine(topic string, doneChannel <-chan bool, messages chan<- listen_groups.ForwardedMessage, subscriptionDone chan<- bool, ctx context.Context) {
