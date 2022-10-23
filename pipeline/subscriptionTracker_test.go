@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/jettdc/switchboard/config"
-	"github.com/jettdc/switchboard/pubsub_mock"
+	"github.com/jettdc/switchboard/mock"
 	"testing"
 )
 
@@ -17,7 +17,7 @@ func TestSubscriptionTracker_TrackEndpointDesc_DoesntExist(t *testing.T) {
 	// Assert that Bar() is invoked.
 	defer ctrl.Finish()
 
-	m := pubsub_mock.NewMockPubSub(ctrl)
+	m := mock.NewMockPubSub(ctrl)
 	c, cf := context.WithCancel(context.Background())
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
@@ -41,7 +41,7 @@ func TestSubscriptionTracker_TrackEndpointDesc_Exists(t *testing.T) {
 	// Assert that Bar() is invoked.
 	defer ctrl.Finish()
 
-	m := pubsub_mock.NewMockPubSub(ctrl)
+	m := mock.NewMockPubSub(ctrl)
 	c, cf := context.WithCancel(context.Background())
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
@@ -75,7 +75,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_TrackedNoParams(t
 	// Assert that Bar() is invoked.
 	defer ctrl.Finish()
 
-	m := pubsub_mock.NewMockPubSub(ctrl)
+	m := mock.NewMockPubSub(ctrl)
 	c, cf := context.WithCancel(context.Background())
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
@@ -106,7 +106,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_TrackedWithParams
 	// Assert that Bar() is invoked.
 	defer ctrl.Finish()
 
-	m := pubsub_mock.NewMockPubSub(ctrl)
+	m := mock.NewMockPubSub(ctrl)
 	c, cf := context.WithCancel(context.Background())
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	p1 := make(map[string]string)
@@ -141,7 +141,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedNoParams
 	// Assert that Bar() is invoked.
 	defer ctrl.Finish()
 
-	m := pubsub_mock.NewMockPubSub(ctrl)
+	m := mock.NewMockPubSub(ctrl)
 	c, cf := context.WithCancel(context.Background())
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
@@ -172,7 +172,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UnrackedOneParams
 	// Assert that Bar() is invoked.
 	defer ctrl.Finish()
 
-	m := pubsub_mock.NewMockPubSub(ctrl)
+	m := mock.NewMockPubSub(ctrl)
 	c, cf := context.WithCancel(context.Background())
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	p1 := make(map[string]string)
@@ -205,7 +205,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UnrackedOneParams
 	// Assert that Bar() is invoked.
 	defer ctrl.Finish()
 
-	m := pubsub_mock.NewMockPubSub(ctrl)
+	m := mock.NewMockPubSub(ctrl)
 	c, cf := context.WithCancel(context.Background())
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	p1 := make(map[string]string)
@@ -238,7 +238,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedBothPara
 	// Assert that Bar() is invoked.
 	defer ctrl.Finish()
 
-	m := pubsub_mock.NewMockPubSub(ctrl)
+	m := mock.NewMockPubSub(ctrl)
 	c, cf := context.WithCancel(context.Background())
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	p1 := make(map[string]string)
@@ -273,7 +273,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedBothPara
 	// Assert that Bar() is invoked.
 	defer ctrl.Finish()
 
-	m := pubsub_mock.NewMockPubSub(ctrl)
+	m := mock.NewMockPubSub(ctrl)
 	c, cf := context.WithCancel(context.Background())
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	p1 := make(map[string]string)

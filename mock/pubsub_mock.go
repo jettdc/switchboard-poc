@@ -2,7 +2,7 @@
 // Source: ./pubsub/pubsub.go
 
 // Package pubsub_mock is a generated GoMock package.
-package pubsub_mock
+package mock
 
 import (
 	context "context"
