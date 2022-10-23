@@ -10,15 +10,15 @@ import (
 
 type PubSub interface {
 	Connect() error
-	Subscribe(ctx context.Context, topic string) (chan Message, error)
+	Subscribe(ctx context.Context, topic string, listenerId string) (chan ForwardedMessage, error)
 }
 
-type Message struct {
+type ForwardedMessage struct {
 	Topic   string `json:"topic"`
 	Payload string `json:"payload"`
 }
 
-func (p Message) String() (string, error) {
+func (p ForwardedMessage) String() (string, error) {
 	b, err := json.Marshal(p)
 	if err != nil {
 		return "", fmt.Errorf("invalid pubsub message json")

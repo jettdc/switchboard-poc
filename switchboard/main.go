@@ -38,18 +38,23 @@ func main() {
 		u.Logger.Fatal(err.Error())
 	}
 
-	u.Logger.Fatal(startServer(switchboardConfig).Error())
+	u.Logger.Fatal(startServer(switchboardConfig, pubsubClient).Error())
 }
 
-func startServer(c *config.Config) error {
+func startServer(c *config.Config, pubsubClient pubsub.PubSub) error {
 	gin.SetMode(gin.ReleaseMode)
 	server := gin.New()
 	server.Use(ginzap.Ginzap(u.Logger.ZapLogger, time.RFC3339, true))
 	server.Use(ginzap.RecoveryWithZap(u.Logger.ZapLogger, true))
+
+	// Health check
 	server.GET("/", func(c *gin.Context) { c.JSON(200, "OK") })
 
+	// For requesting multiple logical websockets with a single connection
+	server.GET("/multi", pipeline.MultiHandler(c, pubsubClient))
+
 	for _, route := range c.Routes {
-		server.GET(route.Endpoint, pipeline.NewRoutePipeline(route))
+		server.GET(route.Endpoint, pipeline.NewRoutePipeline(route, pubsubClient))
 	}
 
 	addr := fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port)

@@ -1,102 +1,34 @@
 package pipeline
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
+	"github.com/google/uuid"
 	"github.com/jettdc/switchboard/config"
 	"github.com/jettdc/switchboard/pubsub"
 	"github.com/jettdc/switchboard/u"
 	"github.com/jettdc/switchboard/websockets"
 )
 
-func NewRoutePipeline(route config.RouteConfig) gin.HandlerFunc {
+func NewRoutePipeline(route config.RouteConfig, pubsubClient pubsub.PubSub) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// TODO: Route connection through any middleware if it exists
+		listenerId := uuid.NewString()
+		pipelineCtx := NewPipeContext(route, c.Params, pubsubClient, c.Request.URL.Path, listenerId)
 
-		ctx, cancelFunc := context.WithCancel(context.Background())
-		allMessages := make(chan pubsub.Message, 8)
-
-		// Subscribe to all specified topics
-		// route all messages for this route into a single channel
-		for _, topic := range route.Topics {
-			if err := listenOnTopic(topic, c.Params, allMessages, ctx); err != nil {
-				u.Err(c, u.InternalServerError("could not subscribe to topic %s", topic))
-				cancelFunc()
-				return
-			}
+		if err := pipelineCtx.ListenToAllTopics(); err != nil {
+			u.Err(c, u.InternalServerError(err.Error()))
+			return
 		}
 
 		// Upgrade request to websocket connection
 		wsConnection, err := websockets.HandleConnection(c.Writer, c.Request)
 		if err != nil {
 			u.Err(c, u.InternalServerError("Failed to upgrade connection to websocket for route %s", c.Request.URL.Path))
-			cancelFunc()
+			pipelineCtx.CancelFunc()
 			return
 		}
 
 		// Cancel our context if there's a websocket error and continuously write incoming messages to ws
-		go cancelCtxOnWSErr(wsConnection, cancelFunc)
-		go writeMessagesToWS(allMessages, wsConnection, c.Request.URL.Path, ctx)
-
-		return
-	}
-}
-
-// Subscribe to a topic and forward all messages to the single channel
-func listenOnTopic(topic string, params gin.Params, allMessages chan pubsub.Message, ctx context.Context) error {
-	// TODO: Only subscribe if not already subscribed, otherwise tap into the message stream
-
-	// /example/topic/:id -> /example/topic/3
-	// Don't need to check for error, topics are validated on config load
-	parameterizedTopic, _ := config.ParameterizeTopic(topic, params)
-
-	topicMessages, err := pubsub.Redis.Subscribe(ctx, parameterizedTopic)
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for {
-			select {
-			case msg := <-topicMessages:
-				allMessages <- msg
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	return nil
-}
-
-func cancelCtxOnWSErr(wsConnection *websocket.Conn, cancelFunc context.CancelFunc) {
-	for {
-		_, _, err := wsConnection.ReadMessage()
-		if err != nil {
-			cancelFunc()
-			return
-		}
-	}
-}
-
-func writeMessagesToWS(messages chan pubsub.Message, wsConnection *websocket.Conn, path string, ctx context.Context) {
-	for {
-		select {
-		case msg := <-messages:
-			// TODO route incoming messages through enrichment plugins, if any
-			j, err := msg.String()
-			if err != nil {
-				fmt.Printf("Error converting pubsub message to json.")
-			}
-
-			wsConnection.WriteJSON(j)
-		case <-ctx.Done():
-			u.Logger.Info(fmt.Sprintf("Client disconnected from websocket at %s.", path))
-			wsConnection.Close()
-			return
-		}
+		go cancelCtxOnWSErr(pipelineCtx, wsConnection)
+		go writeMessagesToWS(pipelineCtx, wsConnection)
 	}
 }
