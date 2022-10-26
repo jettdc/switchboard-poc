@@ -1,3 +1,9 @@
+// Package pipeline contains the logic for user subscriptions.
+//
+// A "pipeline" consists of:
+//   - A user connecting on a websocket
+//   - The server subscribing to a topic, forwarding those messages
+//   - Plugins being utilized
 package pipeline
 
 import (
@@ -9,6 +15,10 @@ import (
 	"github.com/jettdc/switchboard/websockets"
 )
 
+// PipeContext serves as an abstraction for a connection to a pubsub provider.
+// It represents a single listener, an important concept for [pubsub/listen_groups]. It provides a convenient
+// centralization and abstraction for subscribing to topics, forwarding those messages to a channel, and handling the
+// lifecycle of the listener.
 type PipeContext struct {
 	Ctx              context.Context
 	CancelFunc       context.CancelFunc
@@ -18,21 +28,6 @@ type PipeContext struct {
 	AllMessages      chan websockets.Message
 	PubSub           pubsub.PubSub
 	ListenerId       string
-}
-
-func NewPipeContext(route config.RouteConfig, params gin.Params, pubsubClient pubsub.PubSub, path string, listenerId string) *PipeContext {
-	newCtx, cancelFunc := context.WithCancel(context.Background())
-	pipelineCtx := PipeContext{
-		ResolvedEndpoint: path,
-		RouteConfig:      route,
-		RouteParams:      params,
-		AllMessages:      make(chan websockets.Message, 8),
-		Ctx:              newCtx,
-		CancelFunc:       cancelFunc,
-		PubSub:           pubsubClient,
-		ListenerId:       listenerId,
-	}
-	return &pipelineCtx
 }
 
 func NewPipeContextFromContext(route config.RouteConfig, params gin.Params, pubsubClient pubsub.PubSub, path string, listenerId string, ctx context.Context) *PipeContext {
@@ -50,8 +45,8 @@ func NewPipeContextFromContext(route config.RouteConfig, params gin.Params, pubs
 	return &pipelineCtx
 }
 
-// Subscribe to all specified topics
-// route all messages for this route into a single channel
+// ListenToAllTopics subscribes to all topics listed in the [PipeContext] RouteConfig, as well as parameterizes them.
+// All messages are then forwarded to the [PipeContext] message channel.
 func (p *PipeContext) ListenToAllTopics() error {
 	for _, topic := range p.RouteConfig.Topics {
 		if err := p.listenOnTopic(topic); err != nil {
@@ -62,9 +57,7 @@ func (p *PipeContext) ListenToAllTopics() error {
 	return nil
 }
 
-// Subscribe to a topic and forward all messages to the single channel
 func (p *PipeContext) listenOnTopic(topic string) error {
-	// TODO: Make sure not listening twice
 
 	// /example/topic/:id -> /example/topic/3
 	// Don't need to check for error, topics are validated on config load

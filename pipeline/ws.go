@@ -6,16 +6,6 @@ import (
 	"github.com/jettdc/switchboard/websockets"
 )
 
-func cancelCtxOnWSErr(pipelineContext *PipeContext, wsConn *websockets.WSConn) {
-	for {
-		_, _, err := wsConn.ReadMessageSafe()
-		if err != nil {
-			pipelineContext.CancelFunc()
-			return
-		}
-	}
-}
-
 func writeMessagesToWS(pipeContext *PipeContext, wsConn *websockets.WSConn) {
 	for {
 		select {

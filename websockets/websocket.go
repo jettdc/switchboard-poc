@@ -36,6 +36,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) (*WSConn, error) {
 	return &WSConn{conn, &readLock, &writeLock, ctx, cancelFunc}, nil
 }
 
+// TODO: might not actually need locks on these...
 func (w *WSConn) ReadMessageSafe() (messageType int, p []byte, err error) {
 	w.ReadLock.Lock()
 	defer w.ReadLock.Unlock()
@@ -63,4 +64,19 @@ func (w *WSConn) CloseAndCancel() {
 	}
 
 	w.CancelFunc()
+}
+
+// CancelCtxOnReadErr should only be used on connections where no other reads are being made. No more than one goroutine
+// may read from the connection at the same time, so this should be used strictly on write only channels. In other cases,
+// context cancelling should be included with the message processing logic.
+func (w *WSConn) CancelCtxOnReadErr() {
+	go func() {
+		for {
+			msgType, _, err := w.ReadMessageSafe()
+			if msgType == websocket.CloseMessage || err != nil {
+				w.CloseAndCancel()
+				return
+			}
+		}
+	}()
 }
