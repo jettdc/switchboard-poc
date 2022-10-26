@@ -1,0 +1,25 @@
+version: "3.9"
+
+# [BUILD THE EXAMPLE]
+# docker compose up
+
+# [STOP RUNNING THE EXAMPLE]
+# docker compose down
+
+# [MANUALLY SEND REDIS MESSAGES]
+# docker exec -it example-redis-1 redis-cli
+
+services:
+  switchboard:
+    image: "jettcrowson/switchboard:0.0.2"
+    ports:
+      - "8080:8080"
+    environment:
+      REDIS_ADDRESS: redis:6379
+    volumes:
+      - ./config.yaml:/switchboard/config.yaml
+      - ./plugins:/switchboard/plugins
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"

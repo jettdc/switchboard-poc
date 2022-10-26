@@ -15,19 +15,15 @@
 # vendor/
 
 .idea
-
 plugins
 config.yaml
-
 gazer.yaml
 scripts
-
-
 .air.toml
-
 tmp
-
 bin
 certs
-
 docker-compose.yaml
+
+# Allow in example folder
+!example/**
