@@ -27,3 +27,6 @@ docker-compose.yaml
 
 # Allow in example folder
 !example/**
+version
+
+publish.ps1
