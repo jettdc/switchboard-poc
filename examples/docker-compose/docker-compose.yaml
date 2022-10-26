@@ -7,7 +7,7 @@ version: "3.9"
 # docker compose down
 
 # [MANUALLY SEND REDIS MESSAGES]
-# docker exec -it example-redis-1 redis-cli
+# docker exec -it examples-redis-1 redis-cli
 
 services:
   switchboard:

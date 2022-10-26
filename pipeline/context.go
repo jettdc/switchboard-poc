@@ -59,7 +59,7 @@ func (p *PipeContext) ListenToAllTopics() error {
 
 func (p *PipeContext) listenOnTopic(topic string) error {
 
-	// /example/topic/:id -> /example/topic/3
+	// /examples/topic/:id -> /examples/topic/3
 	// Don't need to check for error, topics are validated on config load
 	parameterizedTopic, _ := config.ParameterizeTopic(topic, p.RouteParams)
 
