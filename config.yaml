@@ -2,10 +2,7 @@ server:
   host: localhost
   port: 8080
   pubsub:
-    provider: Redis
-  ssl:
-    cert: ./certs/cert.pem
-    key: ./certs/key.pem
+    provider: redis
 routes:
   - endpoint: "/api/ws/test"
     topics:

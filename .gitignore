@@ -29,3 +29,5 @@ tmp
 
 bin
 certs
+
+docker-compose.yaml
