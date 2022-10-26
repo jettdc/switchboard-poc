@@ -11,7 +11,7 @@ import (
 	"github.com/jettdc/switchboard/websockets"
 )
 
-func MultiHandler(switchboardConfig *config.Config, pubsubClient pubsub.PubSub) gin.HandlerFunc {
+func NewDynamicRoutePipeline(switchboardConfig *config.Config, pubsubClient pubsub.PubSub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Makes sure that listen requests are idempotent through all subscribe requests
 		listenerId := uuid.NewString()

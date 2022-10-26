@@ -58,7 +58,7 @@ func startServer(c *config.Config, pubsubClient pubsub.PubSub) error {
 	server.GET("/", func(c *gin.Context) { c.JSON(200, "OK") })
 
 	// For requesting multiple logical websockets with a single connection
-	server.GET("/multi", pipeline.MultiHandler(c, pubsubClient))
+	server.GET("/multi", pipeline.NewDynamicRoutePipeline(c, pubsubClient))
 
 	for _, route := range c.Routes {
 		server.GET(route.Endpoint, pipeline.NewRoutePipeline(route, pubsubClient))
