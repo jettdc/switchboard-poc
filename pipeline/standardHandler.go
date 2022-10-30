@@ -12,6 +12,8 @@ import (
 func NewRoutePipeline(route config.RouteConfig, pubsubClient pubsub.PubSub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		// TODO: MIDDLEWARE PLUGINS
+
 		// Upgrade request to websocket connection
 		wsConnection, err := websockets.HandleConnection(c.Writer, c.Request)
 		if err != nil {

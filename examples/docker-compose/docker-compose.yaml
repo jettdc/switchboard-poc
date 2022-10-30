@@ -11,7 +11,7 @@ version: "3.9"
 
 services:
   switchboard:
-    image: "jettcrowson/switchboard:0.0.2"
+    image: "jettcrowson/switchboard:0.0.3"
     ports:
       - "8080:8080"
     environment:
@@ -19,6 +19,8 @@ services:
     volumes:
       - ./config.yaml:/switchboard/config.yaml
       - ./plugins:/switchboard/plugins
+    depends_on:
+      - redis
   redis:
     image: "redis:latest"
     ports:

@@ -4,22 +4,18 @@ server:
   pubsub:
     provider: redis
 routes:
-  - endpoint: "/api/ws/test"
+  - endpoint: "/api/ws/customers/:customerId/orders/:orderId/updates"
     topics:
-      - "/test/orders"
-      - "/test/status"
+      - "/customers/:customerId/orders/:orderId/updates"
     plugins:
       middleware:
-        - "./plugins/auth.so"
+        - "./plugins/authenticateCustomerPlugin.so"
       message-enrichment:
-        - "./plugins/enrich-pizza.so"
+        - "./plugins/enrichOrderUpdate.so"
 
-  - endpoint: '/api/ws/cool-endpoint/:id/orders'
+  - endpoint: "/api/ws/customers/:customerId/notifications"
     topics:
-      - "/cool-topic/:id/orders"
+      - "/customers/:customerId/notifications"
     plugins:
       middleware:
-        - "./plugins/auth.so"
-        - "./plugins/awesome-middleware.so"
-      message-enrichment:
-        - "./plugins/enrich-pizza.so"
+        - "./plugins/authenticateCustomerPlugin.so"
