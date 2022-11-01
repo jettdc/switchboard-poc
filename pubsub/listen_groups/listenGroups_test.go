@@ -8,8 +8,17 @@ import (
 	"testing"
 )
 
+var loggerInitialized = false
+
+func InitLogger() {
+	if !loggerInitialized {
+		u.InitializeLogger("testing")
+		loggerInitialized = true
+	}
+}
+
 func TestGetListenGroup_NoExisting(t *testing.T) {
-	u.InitializeLogger("testing")
+	InitLogger()
 	ctrl := gomock.NewController(t)
 
 	fmc := make(chan ForwardedMessage, 1)
