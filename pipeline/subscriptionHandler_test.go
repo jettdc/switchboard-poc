@@ -10,7 +10,7 @@ import (
 )
 
 func TestSubscriptionTracker_TrackEndpointDesc_DoesntExist(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHandler := NewSubscriptionHandler()
 
 	ctrl := gomock.NewController(t)
 
@@ -22,11 +22,11 @@ func TestSubscriptionTracker_TrackEndpointDesc_DoesntExist(t *testing.T) {
 	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
 
-	err := subscriptionTracker.TrackEndpointDesc(pc, &ed)
+	err := subscriptionHandler.Track(pc, &ed)
 	if err != nil {
 		t.Errorf("shouldn't return an error")
 	}
-	if subscriptionTracker.SeenEndpointDescs[&ed] != pc {
+	if subscriptionHandler.tracker.SeenEndpointDescs[&ed] != pc {
 		t.Errorf("tracking an endpoint description for the first time should track the current pipeline context")
 	}
 
@@ -34,7 +34,7 @@ func TestSubscriptionTracker_TrackEndpointDesc_DoesntExist(t *testing.T) {
 }
 
 func TestSubscriptionTracker_TrackEndpointDesc_Exists(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHandler := NewSubscriptionHandler()
 
 	ctrl := gomock.NewController(t)
 
@@ -47,8 +47,8 @@ func TestSubscriptionTracker_TrackEndpointDesc_Exists(t *testing.T) {
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
 	ed2 := EndpointDesc{Endpoint: "/firsttest", Params: nil}
 
-	err := subscriptionTracker.TrackEndpointDesc(pc, &ed)
-	err = subscriptionTracker.TrackEndpointDesc(pc, &ed2)
+	err := subscriptionHandler.Track(pc, &ed)
+	err = subscriptionHandler.Track(pc, &ed2)
 	if err == nil {
 		t.Errorf("should return an error")
 	}
@@ -57,10 +57,10 @@ func TestSubscriptionTracker_TrackEndpointDesc_Exists(t *testing.T) {
 }
 
 func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_Nonetracked(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHandler := NewSubscriptionHandler()
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
 
-	_, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(ed)
+	_, err := subscriptionHandler.GetPipeCtx(ed)
 
 	if err == nil {
 		t.Errorf("should return an error if there are no pipelines associated with the requested endpoint desc")
@@ -68,7 +68,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_Nonetracked(t *te
 }
 
 func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_TrackedNoParams(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHandler := NewSubscriptionHandler()
 
 	ctrl := gomock.NewController(t)
 
@@ -81,11 +81,11 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_TrackedNoParams(t
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
 
 	// One with an endpoint that behaves the same is already being tracked
-	subscriptionTracker.SeenEndpointDescs[&ed] = pc
+	subscriptionHandler.tracker.SeenEndpointDescs[&ed] = pc
 
 	ed2 := EndpointDesc{Endpoint: "/firsttest", Params: nil}
 
-	pipelineCtx, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(ed2)
+	pipelineCtx, err := subscriptionHandler.GetPipeCtx(ed2)
 
 	if err != nil {
 		t.Errorf("should not return an error")
@@ -99,7 +99,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_TrackedNoParams(t
 }
 
 func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_TrackedWithParams(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHandler := NewSubscriptionHandler()
 
 	ctrl := gomock.NewController(t)
 
@@ -114,13 +114,13 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_TrackedWithParams
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: &p1}
 
 	// One with an endpoint that behaves the same is already being tracked
-	subscriptionTracker.SeenEndpointDescs[&ed] = pc
+	subscriptionHandler.tracker.SeenEndpointDescs[&ed] = pc
 
 	p2 := make(map[string]string)
 	p2["param"] = "value"
 	ed2 := EndpointDesc{Endpoint: "/firsttest", Params: &p2}
 
-	pipelineCtx, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(ed2)
+	pipelineCtx, err := subscriptionHandler.GetPipeCtx(ed2)
 
 	if err != nil {
 		t.Errorf("should not return an error")
@@ -134,7 +134,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_TrackedWithParams
 }
 
 func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedNoParams(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHandler := NewSubscriptionHandler()
 
 	ctrl := gomock.NewController(t)
 
@@ -147,11 +147,11 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedNoParams
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
 
 	// One with an endpoint that behaves the same is already being tracked
-	subscriptionTracker.SeenEndpointDescs[&ed] = pc
+	subscriptionHandler.tracker.SeenEndpointDescs[&ed] = pc
 
 	ed2 := EndpointDesc{Endpoint: "/firsttest2", Params: nil}
 
-	pipelineCtx, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(ed2)
+	pipelineCtx, err := subscriptionHandler.GetPipeCtx(ed2)
 
 	if err == nil {
 		t.Errorf("should return an error")
@@ -165,7 +165,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedNoParams
 }
 
 func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UnrackedOneParams(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHandler := NewSubscriptionHandler()
 
 	ctrl := gomock.NewController(t)
 
@@ -180,11 +180,11 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UnrackedOneParams
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: &p1}
 
 	// One with an endpoint that behaves the same is already being tracked
-	subscriptionTracker.SeenEndpointDescs[&ed] = pc
+	subscriptionHandler.tracker.SeenEndpointDescs[&ed] = pc
 
 	ed2 := EndpointDesc{Endpoint: "/firsttest", Params: nil}
 
-	pipelineCtx, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(ed2)
+	pipelineCtx, err := subscriptionHandler.GetPipeCtx(ed2)
 
 	if err == nil {
 		t.Errorf("should return an error")
@@ -198,7 +198,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UnrackedOneParams
 }
 
 func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UnrackedOneParamsOther(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHandler := NewSubscriptionHandler()
 
 	ctrl := gomock.NewController(t)
 
@@ -213,11 +213,11 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UnrackedOneParams
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
 
 	// One with an endpoint that behaves the same is already being tracked
-	subscriptionTracker.SeenEndpointDescs[&ed] = pc
+	subscriptionHandler.tracker.SeenEndpointDescs[&ed] = pc
 
 	ed2 := EndpointDesc{Endpoint: "/firsttest", Params: &p1}
 
-	pipelineCtx, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(ed2)
+	pipelineCtx, err := subscriptionHandler.GetPipeCtx(ed2)
 
 	if err == nil {
 		t.Errorf("should return an error")
@@ -231,7 +231,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UnrackedOneParams
 }
 
 func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedBothParams(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHanlder := NewSubscriptionHandler()
 
 	ctrl := gomock.NewController(t)
 
@@ -246,13 +246,13 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedBothPara
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: &p1}
 
 	// One with an endpoint that behaves the same is already being tracked
-	subscriptionTracker.SeenEndpointDescs[&ed] = pc
+	subscriptionHanlder.tracker.SeenEndpointDescs[&ed] = pc
 
 	p2 := make(map[string]string)
 	p2["param"] = "value2"
 	ed2 := EndpointDesc{Endpoint: "/firsttest", Params: &p2}
 
-	pipelineCtx, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(ed2)
+	pipelineCtx, err := subscriptionHanlder.GetPipeCtx(ed2)
 
 	if err == nil {
 		t.Errorf("should return an error")
@@ -266,7 +266,7 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedBothPara
 }
 
 func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedBothParamsDiffKeys(t *testing.T) {
-	subscriptionTracker := SubscriptionTracker{make(map[*EndpointDesc]*PipeContext)}
+	subscriptionHandler := NewSubscriptionHandler()
 
 	ctrl := gomock.NewController(t)
 
@@ -281,13 +281,13 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedBothPara
 	ed := EndpointDesc{Endpoint: "/firsttest", Params: &p1}
 
 	// One with an endpoint that behaves the same is already being tracked
-	subscriptionTracker.SeenEndpointDescs[&ed] = pc
+	subscriptionHandler.tracker.SeenEndpointDescs[&ed] = pc
 
 	p2 := make(map[string]string)
 	p2["param2"] = "value"
 	ed2 := EndpointDesc{Endpoint: "/firsttest", Params: &p2}
 
-	pipelineCtx, err := subscriptionTracker.GetActivePipelineFromEndpointDesc(ed2)
+	pipelineCtx, err := subscriptionHandler.GetPipeCtx(ed2)
 
 	if err == nil {
 		t.Errorf("should return an error")
@@ -299,20 +299,3 @@ func TestSubscriptionTracker_GetActivePipelineFromEndpointDesc_UntrackedBothPara
 
 	cf()
 }
-
-//func TestSubscriptionTracker_TrackEndpointDesc_ExistNoParams(t *testing.T) {
-//	subscriptionTracker := SubscriptionTracker{make(map[*PipeContext]*EndpointDesc)}
-//
-//	ctrl := gomock.NewController(t)
-//
-//	// Assert that Bar() is invoked.
-//	defer ctrl.Finish()
-//
-//	m := pubsub_mock.NewMockPubSub(ctrl)
-//	c, cf := context.WithCancel(context.Background())
-//	pc := NewPipeContextFromContext(config.RouteConfig{}, make(gin.Params, 0), m, "/test", "testid", c)
-//	ed := EndpointDesc{Endpoint: "/firsttest", Params: nil}
-//	subscriptionTracker.TrackEndpointDesc(pc, ed)
-//	assert.Equal(t, subscriptionTracker.SeenEndpointDescs[pc], &ed)
-//	cf()
-//}

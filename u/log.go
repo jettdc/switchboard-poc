@@ -8,6 +8,16 @@ import (
 	"os"
 )
 
+type Log interface {
+	Debug(msg string, fields ...zap.Field)
+	Info(msg string, fields ...zap.Field)
+	Warn(msg string, fields ...zap.Field)
+	Error(msg string, fields ...zap.Field)
+	DPanic(msg string, fields ...zap.Field)
+	Panic(msg string, fields ...zap.Field)
+	Fatal(msg string, fields ...zap.Field)
+}
+
 var Logger *SwitchboardLogger
 
 type SwitchboardLogger struct {
@@ -86,6 +96,8 @@ func getLogLevelFromEnv(environment string) (zapcore.Level, error) {
 		return zap.DebugLevel, nil
 	case "production":
 		return zap.InfoLevel, nil
+	case "testing":
+		return zap.DebugLevel, nil
 	default:
 		return -1, fmt.Errorf("invalid environment, cannot deduce log level")
 	}
