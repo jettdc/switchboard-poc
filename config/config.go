@@ -2,10 +2,12 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"plugin"
+
 	"github.com/fatih/structs"
 	"github.com/jettdc/switchboard/u"
 	"gopkg.in/yaml.v3"
-	"os"
 )
 
 func LoadConfig(path string) (*Config, error) {
@@ -132,9 +134,26 @@ func validateEnrichmentPlugins(enrichmentPlugins []string) error {
 		if err != nil {
 			return fmt.Errorf("cannot find enrichment plugin file at %s", pluginPath)
 		}
+
+		// Open plugin and verify it matches struct definition
+		plug, err := plugin.Open(pluginPath)
+		if err != nil {
+			return err
+		}
+
+		// Ensure it has the Process handler
+		symMP, err := plug.Lookup("EnrichmentPlugin")
+		if err != nil {
+			return err
+		}
+
+		// Ensure function is implemented according to interface
+		_, ok := symMP.(EnrichmentPlugin)
+		if !ok {
+			return fmt.Errorf("invalid enrichment definition in %s", pluginPath)
+		}
 	}
 
-	// TODO: Validate that plugin is ok
 	return nil
 }
 
@@ -145,8 +164,24 @@ func validateMiddlewarePlugins(middlewarePlugins []string) error {
 		if err != nil {
 			return fmt.Errorf("cannot find middleware plugin file at %s", pluginPath)
 		}
-	}
 
-	// TODO: Validate that plugin is ok
+		// Open plugin and verify it matches struct definition
+		plug, err := plugin.Open(pluginPath)
+		if err != nil {
+			return err
+		}
+
+		// Ensure it has the Process handler
+		symMP, err := plug.Lookup("MiddlewarePlugin")
+		if err != nil {
+			return err
+		}
+
+		// Ensure function is implemented according to interface
+		_, ok := symMP.(MiddlewarePlugin)
+		if !ok {
+			return fmt.Errorf("invalid middleware definition in %s", pluginPath)
+		}
+	}
 	return nil
 }
