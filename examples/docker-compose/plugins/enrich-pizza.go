@@ -7,8 +7,8 @@ import (
 type enrichPizzaPlugin string
 
 func (enrichPizzaPlugin) Process(s string) (string, error) {
-	fmt.Println("Successfully loaded enrich plugin!")
-	return "DONE", fmt.Errorf(s)
+	fmt.Println("Successfully loaded enrich plugin")
+	return "DONE", nil
 }
 
 var EnrichmentPlugin enrichPizzaPlugin

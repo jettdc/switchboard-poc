@@ -18,14 +18,16 @@ type PubSubConfig struct {
 }
 
 type RouteConfig struct {
-	Endpoint string        `yaml:"endpoint"`
-	Topics   []string      `yaml:"topics"`
-	Plugins  PluginsConfig `yaml:"plugins,omitempty"`
+	Endpoint string         `yaml:"endpoint"`
+	Topics   []string       `yaml:"topics"`
+	Plugins  *PluginsConfig `yaml:"plugins,omitempty"`
 }
 
 type PluginsConfig struct {
-	MiddlewarePaths []string `yaml:"middleware"`
-	EnrichmentPaths []string `yaml:"message-enrichment"`
+	MiddlewarePaths []string            `yaml:"middleware"`
+	EnrichmentPaths []string            `yaml:"message-enrichment"`
+	Middleware      []*MiddlewarePlugin `yaml:"-"`
+	Enrichment      []*EnrichmentPlugin `yaml:"-"`
 }
 
 type SSLConfig struct {
