@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/autotls"
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,7 @@ import (
 	"github.com/jettdc/switchboard/pipeline"
 	"github.com/jettdc/switchboard/pubsub"
 	"github.com/jettdc/switchboard/u"
+	"github.com/jettdc/switchboard/login"
 	"time"
 )
 
@@ -80,4 +82,31 @@ func startServer(c *config.Config, pubsubClient pubsub.PubSub) error {
 	default:
 		return fmt.Errorf("invalid ssl type")
 	}
+
+	//Login Auth
+	router := gin.Default()
+	router.POST("/loginJSON", func(c *gin.Context) {
+		var json User
+		if err := c.ShouldBindJSON(&json); err == nil {
+			fmt.Println("json receive - %+v", json.Username)
+			
+		}else{
+			fmt.Println("error - %+v", err)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"status": "ok",
+			"data": json,
+		})
+
+		fmt.Println("get username as: ", json.Username)
+
+		foundPassword := login.PostgresQuery(json.Username)
+		if foundPassword == json.Password{
+			fmt.Println("password is the same; login success")
+		}else{
+			fmt.Println("login failed!")
+		}
+	})
+	router.Run("localhost:8080")
 }
