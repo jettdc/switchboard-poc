@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -13,6 +14,19 @@ import (
 
 func NewDynamicRoutePipeline(switchboardConfig *config.Config, pubsubClient pubsub.PubSub) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		// Run middleware
+		var err error
+		for _, route := range switchboardConfig.Routes {
+			for _, plugin := range route.Plugins.Middleware {
+				err = (*plugin).Process(c.Request)
+				if err != nil {
+					u.Err(c, u.InternalServerError(err.Error()))
+					return
+				}
+			}
+		}
+
 		// Makes sure that listen requests are idempotent through all subscribe requests
 		listenerId := uuid.NewString()
 

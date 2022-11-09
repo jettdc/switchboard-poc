@@ -10,16 +10,17 @@ routes:
       - "/test/status"
     plugins:
       middleware:
-        - "./plugins/auth.so"
+        - "./examples/docker-compose/plugins/auth.so"
+        - "./examples/docker-compose/plugins/awesome-middleware.so"
       message-enrichment:
-        - "./plugins/enrich-pizza.so"
+        - "./examples/docker-compose/plugins/enrich-pizza.so"
 
   - endpoint: '/api/ws/cool-endpoint/:id/orders'
     topics:
       - "/cool-topic/:id/orders"
     plugins:
       middleware:
-        - "./plugins/auth.so"
-        - "./plugins/awesome-middleware.so"
+        - "./examples/docker-compose/plugins/auth.so"
+        - "./examples/docker-compose/plugins/awesome-middleware.so"
       message-enrichment:
-        - "./plugins/enrich-pizza.so"
+        - "./examples/docker-compose/plugins/enrich-pizza.so"

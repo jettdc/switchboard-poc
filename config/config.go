@@ -2,10 +2,12 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"plugin"
+
 	"github.com/fatih/structs"
 	"github.com/jettdc/switchboard/u"
 	"gopkg.in/yaml.v3"
-	"os"
 )
 
 func LoadConfig(path string) (*Config, error) {
@@ -107,16 +109,16 @@ func validateSSLConfig(sslConfig *SSLConfig) error {
 	}
 }
 
-func validatePlugins(pluginsConfig PluginsConfig) error {
+func validatePlugins(pluginsConfig *PluginsConfig) error {
 	if len(pluginsConfig.EnrichmentPaths) > 0 {
-		enrichmentPluginsErr := validateEnrichmentPlugins(pluginsConfig.EnrichmentPaths)
+		enrichmentPluginsErr := validateEnrichmentPlugins(pluginsConfig)
 		if enrichmentPluginsErr != nil {
 			return enrichmentPluginsErr
 		}
 	}
 
 	if len(pluginsConfig.MiddlewarePaths) > 0 {
-		middlewarePluginsErr := validateMiddlewarePlugins(pluginsConfig.MiddlewarePaths)
+		middlewarePluginsErr := validateMiddlewarePlugins(pluginsConfig)
 		if middlewarePluginsErr != nil {
 			return middlewarePluginsErr
 		}
@@ -125,28 +127,67 @@ func validatePlugins(pluginsConfig PluginsConfig) error {
 	return nil
 }
 
-func validateEnrichmentPlugins(enrichmentPlugins []string) error {
+func validateEnrichmentPlugins(pluginsConfig *PluginsConfig) error {
 	// Make sure the files exist
-	for _, pluginPath := range enrichmentPlugins {
+	for _, pluginPath := range pluginsConfig.EnrichmentPaths {
 		_, err := os.Stat(pluginPath)
 		if err != nil {
 			return fmt.Errorf("cannot find enrichment plugin file at %s", pluginPath)
 		}
+
+		// Open plugin and verify it matches struct definition
+		plug, err := plugin.Open(pluginPath)
+		if err != nil {
+			return err
+		}
+
+		// Ensure it has the Process handler
+		symEP, err := plug.Lookup("EnrichmentPlugin")
+		if err != nil {
+			return err
+		}
+
+		// Ensure function is implemented according to interface
+		ep, ok := symEP.(EnrichmentPlugin)
+		if !ok {
+			return fmt.Errorf("invalid enrichment definition in %s", pluginPath)
+		}
+
+		// Store the opened plugin
+		pluginsConfig.Enrichment = append(pluginsConfig.Enrichment, &ep)
 	}
 
-	// TODO: Validate that plugin is ok
 	return nil
 }
 
-func validateMiddlewarePlugins(middlewarePlugins []string) error {
+func validateMiddlewarePlugins(pluginsConfig *PluginsConfig) error {
 	// Make sure the files exist
-	for _, pluginPath := range middlewarePlugins {
+	for _, pluginPath := range pluginsConfig.MiddlewarePaths {
 		_, err := os.Stat(pluginPath)
 		if err != nil {
 			return fmt.Errorf("cannot find middleware plugin file at %s", pluginPath)
 		}
-	}
 
-	// TODO: Validate that plugin is ok
+		// Open plugin and verify it matches struct definition
+		plug, err := plugin.Open(pluginPath)
+		if err != nil {
+			return err
+		}
+
+		// Ensure it has the MiddlewarePlugin identifier
+		symMP, err := plug.Lookup("MiddlewarePlugin")
+		if err != nil {
+			return err
+		}
+
+		// Ensure function is implemented according to interface
+		mp, ok := symMP.(MiddlewarePlugin)
+		if !ok {
+			return fmt.Errorf("invalid middleware definition in %s", pluginPath)
+		}
+
+		// Store the opened plugin
+		pluginsConfig.Middleware = append(pluginsConfig.Middleware, &mp)
+	}
 	return nil
 }

@@ -9,6 +9,7 @@ package pipeline
 import (
 	"context"
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jettdc/switchboard/config"
 	"github.com/jettdc/switchboard/pubsub"
@@ -72,6 +73,16 @@ func (p *PipeContext) listenOnTopic(topic string) error {
 		for {
 			select {
 			case msg := <-topicMessages:
+				// Enrich message
+				for _, plugin := range p.RouteConfig.Plugins.Enrichment {
+					enrichedMsg, err := (*plugin).Process(msg.Payload)
+					if err != nil {
+						return
+					}
+					msg.Payload = enrichedMsg
+				}
+
+				// Divvied up by enrichment vs. middleware
 				toForward := websockets.Message{
 					p.ResolvedEndpoint,
 					websockets.ForwardedMessage,
