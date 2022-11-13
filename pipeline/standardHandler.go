@@ -14,11 +14,13 @@ func NewRoutePipeline(route config.RouteConfig, pubsubClient pubsub.PubSub) gin.
 
 		// Run middleware
 		var err error
-		for _, plugin := range route.Plugins.Middleware {
-			err = (*plugin).Process(c.Request)
-			if err != nil {
-				u.Err(c, u.InternalServerError(err.Error()))
-				return
+		if route.Plugins != nil {
+			for _, plugin := range route.Plugins.Middleware {
+				err = (*plugin).Process(c.Request)
+				if err != nil {
+					u.Err(c, u.InternalServerError(err.Error()))
+					return
+				}
 			}
 		}
 
