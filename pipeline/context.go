@@ -74,12 +74,14 @@ func (p *PipeContext) listenOnTopic(topic string) error {
 			select {
 			case msg := <-topicMessages:
 				// Enrich message
-				for _, plugin := range p.RouteConfig.Plugins.Enrichment {
-					enrichedMsg, err := (*plugin).Process(msg.Payload)
-					if err != nil {
-						return
+				if p.RouteConfig.Plugins != nil {
+					for _, plugin := range p.RouteConfig.Plugins.Enrichment {
+						enrichedMsg, err := (*plugin).Process(msg.Payload)
+						if err != nil {
+							return
+						}
+						msg.Payload = enrichedMsg
 					}
-					msg.Payload = enrichedMsg
 				}
 
 				// Divvied up by enrichment vs. middleware

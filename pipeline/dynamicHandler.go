@@ -18,11 +18,13 @@ func NewDynamicRoutePipeline(switchboardConfig *config.Config, pubsubClient pubs
 		// Run middleware
 		var err error
 		for _, route := range switchboardConfig.Routes {
-			for _, plugin := range route.Plugins.Middleware {
-				err = (*plugin).Process(c.Request)
-				if err != nil {
-					u.Err(c, u.InternalServerError(err.Error()))
-					return
+			if route.Plugins != nil {
+				for _, plugin := range route.Plugins.Middleware {
+					err = (*plugin).Process(c.Request)
+					if err != nil {
+						u.Err(c, u.InternalServerError(err.Error()))
+						return
+					}
 				}
 			}
 		}

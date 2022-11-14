@@ -48,7 +48,7 @@ func validateConfig(config *Config) error {
 		}
 
 		// Make sure that specified plugins exist and are valid
-		if !structs.IsZero(route.Plugins) {
+		if route.Plugins != nil {
 			if err := validatePlugins(route.Plugins); err != nil {
 				return err
 			}
@@ -116,7 +116,6 @@ func validatePlugins(pluginsConfig *PluginsConfig) error {
 			return enrichmentPluginsErr
 		}
 	}
-
 	if len(pluginsConfig.MiddlewarePaths) > 0 {
 		middlewarePluginsErr := validateMiddlewarePlugins(pluginsConfig)
 		if middlewarePluginsErr != nil {
