@@ -6,19 +6,26 @@ import (
 	"net/http"
 	_ "github.com/lib/pq"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"os"
+	"strconv"
   )
-  
-const (
-host     = "localhost"
-port     = 5431
-user     = "switchboard_admin"
-password = "12345687"
-dbname   = "go_test"
-)
 
 
-func PostgresQuery(username string) string { //ctx context.Context
-	postgresqlDbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+func InitializeEnv() error {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Error loading .env file")
+		return err
+	}
+	return nil
+}
+
+
+func PostgresQuery(username string, userpassword string, host string, port string, user string, password string, dbname string) string {
+	intport, err := strconv.Atoi(port)
+	postgresqlDbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, intport, user, password, dbname)
+
 	db, err := sql.Open("postgres", postgresqlDbInfo)
 	if err != nil {
 		panic(err)
@@ -30,16 +37,13 @@ func PostgresQuery(username string) string { //ctx context.Context
 	}
 	fmt.Println("Established a successful connection with database!")
 
-	var password string
-	row := db.QueryRow("SELECT password FROM person where username=$1", username)
-	if err := row.Scan(&password); err != nil{
-		fmt.Println("Error with querying data: Didn't find username")
+	var token string
+	row := db.QueryRow("SELECT token FROM person where username=$1 and password=$2", username, userpassword)
+	if err := row.Scan(&token); err != nil{
 	}else{
-		fmt.Println("Found username")
+		return token
 	}
-	// fmt.Println("found password as: ", password)
-	return password
-
+	return token
 }
 
 type User struct {
@@ -50,29 +54,27 @@ type User struct {
 
 func main(){
 	
+	InitializeEnv()
 	router := gin.Default()
 	router.POST("/loginJSON", func(c *gin.Context) {
 		var json User
 		if err := c.ShouldBindJSON(&json); err == nil {
-			fmt.Println("json receive - %+v", json.Username)
 			
 		}else{
 			fmt.Println("error - %+v", err)
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"status": "ok",
-			"data": json,
-		})
-
 		fmt.Println("get username as: ", json.Username)
 
-		foundPassword := PostgresQuery(json.Username)
-		if foundPassword == json.Password{
-			fmt.Println("password is the same; login success")
+		foundToken := PostgresQuery(json.Username, json.Password, os.Getenv("host"), os.Getenv("port"), os.Getenv("user"), os.Getenv("password"), os.Getenv("dbname"))
+		if len(foundToken) > 0{
+			c.JSON(http.StatusOK, gin.H{
+				"status": "ok",
+				"token": foundToken,
+			})
 		}else{
-			fmt.Println("login failed")
+			c.JSON(http.StatusUnauthorized, "")
 		}
 	})
-	router.Run("localhost:8081")
+	router.Run("localhost:8081") //question: modify this as os.getenv too?
 }
