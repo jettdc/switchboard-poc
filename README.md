@@ -121,6 +121,27 @@ In the `/switchboard` directory
 
 You will need to ensure that any plugins that you've specified actually exist.
 
+### Plugins
+Plugins must adhere to the `MiddlewarePlugin` and `EnrichmentPlugin` interfaces, defined in `switchboard/config/pluginInterfaces.go`. Plugins can be defined as follows (this example shows middleware):
+
+`myPlugin.go`
+```golang
+package main
+import (
+    "net/http"
+)
+
+type myPluginName string
+func (myPluginName) Process(r *http.Request) error {
+    // My Plugin Implementation
+}
+
+var MiddlewarePlugin myPluginName
+```
+
+Compile the plugin to produce the .so file (i.e. `myPlugin.so`) that can then be referenced from `config.yaml`:
+`go build -buildmode=plugin -o myPlugin.so myPlugin.go`
+
 ### Manual Testing
 - [Download insomnia](https://insomnia.rest/download) (or postman, but insomnia is a bit more lightweight and simple)
 - On the left panel, click the +, then select "Websocket Connection"
@@ -141,24 +162,3 @@ You will need to ensure that any plugins that you've specified actually exist.
 ## Frontend
 ### Setup
 ### Running
-
-## Repo Organization
-
-**High level plan: do all dev in switchboard repo, migrate Pizza app to separate repo at the end**
-```
-switchboard/
-	src/
-    	config/
-        plugins/
-        main.go
-	Dockerfile
-app-backend/
-	src/
-    	services-publishing-to-redis/
-	Dockerfile
-app-frontend/
-	src/
-    	index.html
-.env
-docker-compose
-```
