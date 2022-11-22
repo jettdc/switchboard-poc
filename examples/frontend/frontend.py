@@ -8,11 +8,11 @@ def home():
 
 @app.route("/login")
 def login():
-    pass
+    return render_template('login.html', ID=id)
 
 @app.route("/order")
 def order():
-    pass
+    return render_template('order.html', ID=id)
 
 @app.route("/track/<int:id>")
 def track(id):
