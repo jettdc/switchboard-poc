@@ -2,6 +2,34 @@
 
 <!-- Content -->
 {% block content %}
-  <center><h1>Order # XXX</h1></center>
-  <!-- Dynamically add notifications here -->
+  <center><h1>Order # {{ ID }}</h1></center>
+  <div id="notifications"></div>
+
+  <!-- Dynamically grab notifications here -->
+  <script>
+    // const socket = new WebSocket('wss://localhost:8080/api/ws/test');
+    // socket.addEventListener('open', function (event) {
+    //     socket.send('Connection Established');
+    // });
+    // socket.addEventListener('message', function (event) {
+    //     console.log(event.data);
+    //     // const d = new Date();
+    //     // let time = d.getTime();
+    //     // var notif = document.createElement(time.toString());
+    //     // var text = document.createTextNode(event.data.toString());
+    //     // notif.appendChild(text);
+    //     // document.getElementById("notifications").appendChild(notif);
+    // });
+    var addr = "wss://localhost:8080/store/" + {{ ID }} + "/events";
+    var notif = document.createElement('div');
+    notif.id = "1";
+    notif.className = 'notifBox';
+    notif.innerHTML = addr;
+    document.getElementById("notifications").appendChild(notif);
+    var notif2 = document.createElement('div');
+    notif2.id = "2";
+    notif2.className = 'notifBox';
+    notif2.innerHTML = addr;
+    document.getElementById("notifications").appendChild(notif2); // DELETEME
+  </script>
 {% endblock %}

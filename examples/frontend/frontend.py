@@ -14,8 +14,8 @@ def login():
 def order():
     pass
 
-@app.route("/track")
-def track():
-    return render_template('track.html')
+@app.route("/track/<int:id>")
+def track(id):
+    return render_template('track.html', ID=id)
 
 app.run(host="0.0.0.0", port=5000)
