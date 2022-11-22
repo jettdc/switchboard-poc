@@ -5,7 +5,7 @@ WORKDIR /build
 RUN go build -o main .
 
 FROM alpine
-COPY --from=builder /build/main /delivery-service/
-WORKDIR /delivery-service
-EXPOSE 12345
+COPY --from=builder /build/main /store-service/
+WORKDIR /store-service
+EXPOSE 54321
 CMD ["./main"]

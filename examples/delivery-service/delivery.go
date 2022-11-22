@@ -4,15 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 )
 
-// Redis Client - TODO: fit to docker compose service
 var redisClient = redis.NewClient(&redis.Options{
-	Addr: "localhost:6379",
+	Addr: getEnvVar("REDIS_ADDRESS", "localhost:6379"),
 })
 
 type Req struct {
@@ -24,6 +24,14 @@ type Notification struct {
 }
 
 // Helpers
+func getEnvVar(varName string, varDefault string) string {
+	value, exists := os.LookupEnv(varName)
+	if !exists {
+		return varDefault
+	}
+	return value
+}
+
 func publishToRedis(msg Notification, id string) {
 	// Marshal delivery message
 	payload, err := json.Marshal(msg)
