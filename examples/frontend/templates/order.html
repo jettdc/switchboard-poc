@@ -1,18 +1,14 @@
-<html>
+{% extends 'base.html' %}
+
+{% block content %}
   <head>
     <title>Pizza Order</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../static/order.css" rel="stylesheet" media="screen">
   </head>
   
   <body>
-    <div class="topnav">
-        <a class="active" href="#home">Pizza Shop</a>
-        <img align="right" src="https://w7.pngwing.com/pngs/419/473/png-transparent-computer-icons-user-profile-login-user-heroes-sphere-black-thumbnail.png" class="loginlogo">
-      </div>
 
     <div class="container">
-      <div class="header"><h1>Order</h1></div>
+      <center><h1>Order</h1></center>
       <br>
       <form action="" method="post">
         <div class="text">Size: </td> </div>
@@ -39,4 +35,4 @@
       </form>
     </div>
   </body>
-</html>
+  {% endblock %}

@@ -1,8 +1,9 @@
-<html>
+{% extends 'base.html' %}
+
+{% block content %}
   <head>
     <title>Pizza Order - Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../static/bootstrap.min.css" rel="stylesheet" media="screen">
   </head>
   <body>
     <div class="container">
@@ -12,8 +13,8 @@
         <td>Username: </td> <input type="text" placeholder="Username" name="username" value="">
         <br>
         <td>Password: </td><input type="password" placeholder="Password" name="password" value="">
-        <input class="btn btn-default" type="submit" value="Login">
+        <input class="btn" type="submit" value="Login">
       </form>
     </div>
   </body>
-</html>
+{% endblock %}
