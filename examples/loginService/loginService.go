@@ -22,7 +22,7 @@ func InitializeEnv() error {
 }
 
 
-func PostgresQuery(username string, userpassword string, host string, port string, user string, password string, dbname string) string {
+func PostgresQuery(username string, userpassword string, host string, port string, user string, password string, dbname string) (string, error) {
 	intport, err := strconv.Atoi(port)
 	postgresqlDbInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, intport, user, password, dbname)
 
@@ -40,10 +40,12 @@ func PostgresQuery(username string, userpassword string, host string, port strin
 	var token string
 	row := db.QueryRow("SELECT token FROM person where username=$1 and password=$2", username, userpassword)
 	if err := row.Scan(&token); err != nil{
+		fmt.Println("error", err)
+		return "", err
 	}else{
-		return token
+		return token, err
 	}
-	return token
+	
 }
 
 type User struct {
@@ -59,22 +61,23 @@ func main(){
 	router.POST("/loginJSON", func(c *gin.Context) {
 		var json User
 		if err := c.ShouldBindJSON(&json); err == nil {
-			
-		}else{
 			fmt.Println("error - %+v", err)
 		}
+		// else{
+		// 	fmt.Println("error - %+v", err)
+		// }
 
 		fmt.Println("get username as: ", json.Username)
 
-		foundToken := PostgresQuery(json.Username, json.Password, os.Getenv("host"), os.Getenv("port"), os.Getenv("user"), os.Getenv("password"), os.Getenv("dbname"))
-		if len(foundToken) > 0{
+		token, err := PostgresQuery(json.Username, json.Password, os.Getenv("host"), os.Getenv("port"), os.Getenv("user"), os.Getenv("password"), os.Getenv("dbname"))
+		if err != nil{
+			c.JSON(http.StatusUnauthorized, "")
+		} else{
 			c.JSON(http.StatusOK, gin.H{
 				"status": "ok",
-				"token": foundToken,
+				"token": token,
 			})
-		}else{
-			c.JSON(http.StatusUnauthorized, "")
 		}
 	})
-	router.Run("localhost:8081") //question: modify this as os.getenv too?
+	router.Run("localhost:"+os.Getenv("localhostport")) //question: modify this as os.getenv too?
 }
