@@ -1,10 +1,11 @@
 from flask import Flask, request, Response, render_template, redirect, url_for
+import random
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return render_template('base.html')
+    return redirect(url_for('order'))
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -19,19 +20,17 @@ def login():
 
 @app.route("/order", methods=['GET', 'POST'])
 def order():
-    id = 1
+    id = random.randrange(1, 1000)
     token = request.args.get('auth_token')
-    print ("token: ", token)
     if request.method == 'POST':
-        if token == None:
-            return redirect(url_for('login'))
-
+        if not token:
+            token = " "
         return redirect(url_for('track', id = id, token = token))
     return render_template('order.html', token=request.args.get('auth_token'))
 
 @app.route("/track/<int:id>/<string:token>")
 def track(id, token):
-    return render_template('track.html', ID=id, TOKEN = token)
+    return render_template('track.html', id = id, token = token)
 
 app.run(host="0.0.0.0", port=5000)
 

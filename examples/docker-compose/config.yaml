@@ -4,6 +4,13 @@ server:
   pubsub:
     provider: redis
 routes:
+  - endpoint: "/pizza/:id/:token/events"
+    topics:
+      - "/orders/:id/events"
+    plugins:
+      middleware:
+        - "./plugins/auth.so"
+  
   - endpoint: "/api/ws/test"
     topics:
       - "/test/orders"

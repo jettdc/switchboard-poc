@@ -2,34 +2,37 @@
 
 <!-- Content -->
 {% block content %}
-  <center><h1>Order # {{ ID }}</h1></center>
-  <div id="notifications"></div>
+<center><h1>Order # {{ id }}</h1></center>
+<div id="notifications"></div>
 
-  <!-- Dynamically grab notifications here -->
-  <script>
-    // const socket = new WebSocket('wss://localhost:8080/api/ws/test');
-    // socket.addEventListener('open', function (event) {
-    //     socket.send('Connection Established');
-    // });
-    // socket.addEventListener('message', function (event) {
-    //     console.log(event.data);
-    //     // const d = new Date();
-    //     // let time = d.getTime();
-    //     // var notif = document.createElement(time.toString());
-    //     // var text = document.createTextNode(event.data.toString());
-    //     // notif.appendChild(text);
-    //     // document.getElementById("notifications").appendChild(notif);
-    // });
-    var addr = "wss://localhost:8080/store/" + {{ ID }} + "/events";
-    var notif = document.createElement('div');
-    notif.id = "1";
-    notif.className = 'notifBox';
-    notif.innerHTML = addr;
-    document.getElementById("notifications").appendChild(notif);
-    var notif2 = document.createElement('div');
-    notif2.id = "2";
-    notif2.className = 'notifBox';
-    notif2.innerHTML = addr;
-    document.getElementById("notifications").appendChild(notif2); // DELETEME
-  </script>
+<!-- Dynamically grab notifications here -->
+<script>
+  // TODO: use a single endpoint for both services, taking ID + TOKEN
+  const socket = new WebSocket('ws://localhost:8080/api/ws/test');
+
+  // TODO: make this try/except! If connection doesn't work, check
+  // error payload. This should tell us whether the auth plugin
+  // blocked us or not! And if blocked, redirect to login page
+  // Use an alert to make it seem less arbitrary
+
+  // socket.addEventListener('open', function (event) {
+  //     socket.send('Connection Established');
+  // });
+  // socket.addEventListener('message', function (event) {
+  //     console.log(event.data);
+  //     // TODO: add a notif
+  // });
+
+  var addr = "ws://localhost:8080/store/" + {{ id }} + "/events";
+  var notif = document.createElement('div');
+  notif.id = "1";
+  notif.className = 'notifBox';
+  notif.innerHTML = addr;
+  document.getElementById("notifications").appendChild(notif);
+  var notif2 = document.createElement('div');
+  notif2.id = "2";
+  notif2.className = 'notifBox';
+  notif2.innerHTML = addr;
+  document.getElementById("notifications").appendChild(notif2); // DELETEME
+</script>
 {% endblock %}

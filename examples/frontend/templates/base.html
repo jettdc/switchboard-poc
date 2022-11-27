@@ -2,7 +2,10 @@
     <style>
         @import url(https://fonts.googleapis.com/css?family=Lato:400,300,100,700,900);
 
-        
+        body {
+            font-family: Lato;
+        }
+
         div {
             padding: 2% 2%;
         }
@@ -79,7 +82,7 @@
         }
 
         .container{
-            max-width: 500px;
+            max-width: 40%;
             margin: auto;
             display: table-cell;
             vertical-align: right;
@@ -94,8 +97,7 @@
 </head>
 
     <div class="topnav">
-        
-        <img align="right" src="https://w7.pngwing.com/pngs/419/473/png-transparent-computer-icons-user-profile-login-user-heroes-sphere-black-thumbnail.png" class="loginlogo">
+        <a href="{{ url_for('login') }}" style="float:right"><img align="right" src="https://w7.pngwing.com/pngs/419/473/png-transparent-computer-icons-user-profile-login-user-heroes-sphere-black-thumbnail.png" class="loginlogo"></a>
         <h1>🍕 Piazza Shop 🍕</h1>  
     </div>
 
