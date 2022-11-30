@@ -28,7 +28,6 @@ func NewRoutePipeline(route config.RouteConfig, pubsubClient pubsub.PubSub) gin.
 		wsConnection, err := websockets.HandleConnection(c.Writer, c.Request)
 		if err != nil {
 			u.Err(c, u.InternalServerError("Failed to upgrade connection to websocket for route %s", c.Request.URL.Path))
-			wsConnection.CancelFunc()
 			return
 		}
 
