@@ -4,7 +4,7 @@ server:
   pubsub:
     provider: redis
 routes:
-  - endpoint: "/pizza/:id/:token/events"
+  - endpoint: "/orders/:id/:token/events"
     topics:
       - "/orders/:id/events"
     plugins:
@@ -13,13 +13,7 @@ routes:
   
   - endpoint: "/api/ws/test"
     topics:
-      - "/test/orders"
-      - "/test/status"
-    plugins:
-      middleware:
-        - "./plugins/auth.so"
-      message-enrichment:
-        - "./plugins/enrich-pizza.so"
+      - "/orders/:id/events"
 
   - endpoint: '/api/ws/cool-endpoint/:id/orders'
     topics:

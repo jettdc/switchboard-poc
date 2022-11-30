@@ -4,6 +4,14 @@ server:
   pubsub:
     provider: redis
 routes:
+  - endpoint: "/delivery/:id/events"
+    topics:
+      - "/orders/:id/events"
+
+  - endpoint: "/store/:id/events"
+    topics:
+      - "/orders/:id/events"
+
   - endpoint: "/api/ws/test"
     topics:
       - "/test/orders"
