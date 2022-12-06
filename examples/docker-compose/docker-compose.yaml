@@ -30,7 +30,7 @@ services:
     environment:
       REDIS_ADDRESS: redis:6379
   store-service:
-    image: "mtran2021/store-service:0.1"
+    image: "mtran2021/store-service:0.2"
     ports:
       - "54321:54321"
     environment:
