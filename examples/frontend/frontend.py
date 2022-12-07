@@ -21,8 +21,8 @@ def login():
             'username': request.form['username'],
             'password': request.form['password']
         }
-        token = requests.post(url = URL, data = DATA, headers=None)
-        print("token response!", token)
+        token = requests.post(url = URL, json = DATA)
+        print("token response!", token.content)
         temp_token = "200"
         return redirect(url_for('order', auth_token = temp_token)) #also return token
 
