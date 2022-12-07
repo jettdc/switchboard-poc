@@ -10,7 +10,7 @@
   // TODO: use a single endpoint for both services, taking ID + TOKEN
   // ^^^^ use auth header attribute
   // TODO: fix endpoint to general events
-  var addr = "ws://localhost:8080/store/" + {{ id }} + "/events";
+  var addr = "ws://localhost:8080/orders/" + {{ id }} + "/events";
   const socket = new WebSocket(addr);
 
   // TODO: make this try/except! If connection doesn't work, check

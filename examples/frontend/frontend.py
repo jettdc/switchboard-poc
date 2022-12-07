@@ -31,6 +31,8 @@ def order():
 
 @app.route("/track/<int:id>/<string:token>")
 def track(id, token):
+    # TODO: get host from env variable and insert into f string
+    # TODO: also pass host into template render
     os.system(f"curl localhost:54321/store/{id}/events && curl localhost:12345/delivery/{id}/events &")
     return render_template('track.html', id = id, token = token)
 

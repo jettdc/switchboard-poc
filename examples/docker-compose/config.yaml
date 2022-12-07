@@ -4,12 +4,12 @@ server:
   pubsub:
     provider: redis
 routes:
-  - endpoint: "/orders/:id/:token/events"
+  - endpoint: "/orders/:id/events"
     topics:
       - "/orders/:id/events"
-    plugins:
-      middleware:
-        - "./plugins/auth.so"
+    # plugins:
+    #   middleware:
+    #     - "./plugins/auth.so"
   
   - endpoint: "/api/ws/test"
     topics:
@@ -18,9 +18,9 @@ routes:
   - endpoint: '/api/ws/cool-endpoint/:id/orders'
     topics:
       - "/cool-topic/:id/orders"
-    plugins:
-      middleware:
-        - "./plugins/auth.so"
-        - "./plugins/awesome-middleware.so"
-      message-enrichment:
-        - "./plugins/enrich-pizza.so"
+    # plugins:
+    #   middleware:
+    #     - "./plugins/auth.so"
+    #     - "./plugins/awesome-middleware.so"
+    #   message-enrichment:
+    #     - "./plugins/enrich-pizza.so"
