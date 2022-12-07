@@ -27,19 +27,25 @@ services:
   postgres:
     image: "postgres:latest"
     ports:
-      - "5431:5431"
+      - "5432:5432"
     environment:
+      DATABASE_HOST: localhost
       POSTGRES_USER: "switchboard_admin"
       POSTGRES_PASSWORD: "12345687"
-      DB_NAME: "go_test"
+      POSTGRES_DB: "go_test"
     volumes:
       - ../loginService/docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
   auth:
-    image: "mtran2021/login-service:0.0.1"
+    image: "mtran2021/login-service:0.0.2"
     ports:
       - "8081:8081"
-    volumes:
-      - ../loginService/.env:/.env
+    environment:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      POSTGRES_USER: "switchboard_admin"
+      POSTGRES_PASSWORD: "12345687"
+      DB_NAME: "go_test"
+      PORT: 8081
   delivery-service:
     image: "mtran2021/delivery-service:0.1"
     ports:

@@ -1,4 +1,5 @@
 from flask import Flask, request, Response, render_template, redirect, url_for
+import requests
 import random
 import os
 
@@ -14,6 +15,14 @@ def login():
         print (request.form['username'])# - verified
         print (request.form['password'])
         # call loginService and pass in the above two, saves token
+        # TODO: make into dockerized or localhost version
+        URL = "http://localhost:8081/login"
+        DATA = {
+            'username': request.form['username'],
+            'password': request.form['password']
+        }
+        token = requests.post(url = URL, data = DATA, headers=None)
+        print("token response!", token)
         temp_token = "200"
         return redirect(url_for('order', auth_token = temp_token)) #also return token
 
