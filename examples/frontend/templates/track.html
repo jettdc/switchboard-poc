@@ -9,14 +9,13 @@
 <script>
   // TODO: use a single endpoint for both services, taking ID + TOKEN
   // ^^^^ use auth header attribute
-  // TODO: fix endpoint to general events
   var addr = "ws://localhost:8080/orders/" + {{ id }} + "/events";
   const socket = new WebSocket(addr);
 
-  // TODO: make this try/except! If connection doesn't work, check
-  // error payload. This should tell us whether the auth plugin
-  // blocked us or not! And if blocked, redirect to login page
-  // Use an alert to make it seem less arbitrary
+  socket.onclose = function(event) {
+    alert("Authorization required. Redirecting to login.");
+    window.location.replace("/login");
+  }
 
   socket.addEventListener('open', function (event) {
       socket.send('Connection Established');
@@ -30,5 +29,6 @@
       notif.innerHTML = JSON.parse(resp.message.payload).message;
       document.getElementById("notifications").appendChild(notif);
   });
+
 </script>
 {% endblock %}
