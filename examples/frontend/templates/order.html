@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <head>
+    <title>Pizza Order</title>
+  </head>
+  
+  <body>
+
+    <div class="container">
+      <center><h1>Order</h1></center>
+      <br>
+      <form action="" method="post">
+        <div class="text">Choose a size: </td> </div>
+        <br>
+        <select name="work_days" id="food_option" multiple>
+            <option value="1">Large</option>
+            <option value="2">Medium</option>
+            <option value="3">Small</option>
+          </select>
+        <br>
+        <br>
+        <div class="text"><td>Choose a topping: </td> </div>
+        <br>
+        <select name="work_days" id="food_option" multiple>
+            <option value="1">Sausage</option>
+            <option value="2">Tomato</option>
+            <option value="3">Mushroom</option>
+            <option value="4">Pinnapple</option>
+            <option value="5">Banana</option>
+            <option value="6">Chocolate</option>
+          </select>
+        <br>
+        <input class="btn btn-default" type="submit" value="Order Pizza">
+      </form>
+    </div>
+  </body>
+  {% endblock %}

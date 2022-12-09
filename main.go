@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"time"
+
+	cors "github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/autotls"
 	"github.com/gin-gonic/gin"
@@ -9,7 +12,6 @@ import (
 	"github.com/jettdc/switchboard/pipeline"
 	"github.com/jettdc/switchboard/pubsub"
 	"github.com/jettdc/switchboard/u"
-	"time"
 )
 
 func main() {
@@ -53,6 +55,14 @@ func startServer(c *config.Config, pubsubClient pubsub.PubSub) error {
 	server := gin.New()
 	server.Use(ginzap.Ginzap(u.Logger.ZapLogger, time.RFC3339, true))
 	server.Use(ginzap.RecoveryWithZap(u.Logger.ZapLogger, true))
+	server.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:5000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Health check
 	server.GET("/", func(c *gin.Context) { c.JSON(200, "OK") })

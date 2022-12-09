@@ -4,8 +4,14 @@ server:
   pubsub:
     provider: redis
 routes:
-
   - endpoint: "/orders/:id/events"
+    topics:
+      - "/orders/:id/events"
+    plugins:
+      middleware:
+        - "./plugins/auth.so"
+  
+  - endpoint: "/api/ws/test"
     topics:
       - "/orders/:id/events"
 

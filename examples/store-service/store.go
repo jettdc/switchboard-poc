@@ -61,6 +61,7 @@ func storeStatus(c *gin.Context) {
 	}
 
 	// Send Messages
+	time.Sleep(7 * time.Second)
 	msg := new(Notification)
 	msg.Message = "Order received"
 	publishToRedis(*msg, req.ID)
@@ -72,6 +73,7 @@ func storeStatus(c *gin.Context) {
 
 	msg.Message = "Pizza done cooking"
 	publishToRedis(*msg, req.ID)
+	time.Sleep(3 * time.Second)
 }
 
 func main() {
