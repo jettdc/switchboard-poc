@@ -20,6 +20,11 @@ def login():
             'password': request.form['password']
         }
         token_resp = requests.post(url = URL, json = DATA)
+        
+        # Given invalid credentials, prompt user to login again
+        if(token_resp.status_code != 200):
+            return redirect(url_for('login'))
+            
         json_response = json.loads(token_resp.content.decode())
         token = json_response['token']
         return redirect(url_for('order', auth_token = token))
