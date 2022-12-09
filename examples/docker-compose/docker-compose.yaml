@@ -36,7 +36,7 @@ services:
     volumes:
       - ../loginService/docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
   auth:
-    image: "mtran2021/login-service:0.0.2"
+    image: "mtran2021/login-service:0.1.0"
     ports:
       - "8081:8081"
     environment:
