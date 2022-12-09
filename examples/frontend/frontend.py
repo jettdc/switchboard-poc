@@ -2,6 +2,7 @@ from flask import Flask, request, Response, render_template, redirect, url_for
 import requests
 import random
 import os
+import json
 
 app = Flask(__name__)
 
@@ -12,19 +13,16 @@ def home():
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        print (request.form['username'])# - verified
-        print (request.form['password'])
-        # call loginService and pass in the above two, saves token
         # TODO: make into dockerized or localhost version
         URL = "http://localhost:8081/login"
         DATA = {
             'username': request.form['username'],
             'password': request.form['password']
         }
-        token = requests.post(url = URL, json = DATA)
-        print("token response!", token.content)
-        temp_token = "200"
-        return redirect(url_for('order', auth_token = temp_token)) #also return token
+        token_resp = requests.post(url = URL, json = DATA)
+        json_response = json.loads(token_resp.content.decode())
+        token = json_response['token']
+        return redirect(url_for('order', auth_token = token))
 
     return render_template('login.html')
 
