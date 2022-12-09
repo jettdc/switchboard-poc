@@ -6,6 +6,11 @@ import json
 
 app = Flask(__name__)
 
+authAddr = os.getenv("AUTH_ADDRESS") or "localhost:8081"
+switchboardAddr = os.getenv("SWITCHBOARD_ADDRESS") or "localhost:8080"
+deliveryAddr = os.getenv("DELIVERY_ADDRESS") or "localhost:12345"
+storeAddr = os.getenv("STORE_ADDRESS") or "localhost:54321"
+
 @app.route("/")
 def home():
     return redirect(url_for('order'))
@@ -13,8 +18,7 @@ def home():
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # TODO: make into dockerized or localhost version
-        URL = "http://localhost:8081/login"
+        URL = f"http://{authAddr}/login"
         DATA = {
             'username': request.form['username'],
             'password': request.form['password']
@@ -43,10 +47,9 @@ def order():
 
 @app.route("/track/<int:id>/<string:token>")
 def track(id, token):
-    # TODO: get host from env variable and insert into f string
     # TODO: also pass host into template render
-    os.system(f"curl localhost:54321/store/{id}/events && curl localhost:12345/delivery/{id}/events &")
-    return render_template('track.html', id = id, token = token)
+    os.system(f"curl {storeAddr}/store/{id}/events && curl {deliveryAddr}/delivery/{id}/events &")
+    return render_template('track.html', id = id, token = token, switchboardAddr = switchboardAddr)
 
 app.run(host="0.0.0.0", port=5000)
 

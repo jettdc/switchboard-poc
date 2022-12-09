@@ -59,3 +59,12 @@ services:
       - "54321:54321"
     environment:
       REDIS_ADDRESS: redis:6379
+  frontend:
+    image: "mtran2021/pizza-frontend:0.0.1"
+    ports:
+      - "5000:5000"
+    environment:
+      AUTH_ADDRESS: auth:8081
+      # SWITCHBOARD_ADDRESS: switchboard:8080
+      DELIVERY_ADDRESS: delivery-service:12345
+      STORE_ADDRESS: store-service:54321
