@@ -3,15 +3,20 @@ package websockets
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/jettdc/switchboard/u"
 	"net/http"
 	"sync"
+
+	"github.com/gorilla/websocket"
+	"github.com/jettdc/switchboard/u"
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		// origin := r.Header.Get("Origin")
+		return true
+	},
 }
 
 type WSConn struct {
@@ -25,6 +30,7 @@ type WSConn struct {
 func HandleConnection(w http.ResponseWriter, r *http.Request) (*WSConn, error) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <head>
+    <title>Pizza Order - Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Please login</h1>
+      <br>
+      <form action="" method="post">
+        <td>Username: </td> <input type="text" placeholder="Username" name="username" value="">
+        <br>
+        <td>Password: </td><input type="password" placeholder="Password" name="password" value="">
+        <input class="btn" type="submit" value="Login">
+      </form>
+    </div>
+  </body>
+{% endblock %}

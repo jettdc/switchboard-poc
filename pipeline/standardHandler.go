@@ -11,14 +11,22 @@ import (
 
 func NewRoutePipeline(route config.RouteConfig, pubsubClient pubsub.PubSub) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		// TODO: MIDDLEWARE PLUGINS
+		// Run middleware
+		var err error
+		if route.Plugins != nil {
+			for _, plugin := range route.Plugins.Middleware {
+				err = (*plugin).Process(c.Request)
+				if err != nil {
+					u.Err(c, u.InternalServerError(err.Error()))
+					return
+				}
+			}
+		}
 
 		// Upgrade request to websocket connection
 		wsConnection, err := websockets.HandleConnection(c.Writer, c.Request)
 		if err != nil {
 			u.Err(c, u.InternalServerError("Failed to upgrade connection to websocket for route %s", c.Request.URL.Path))
-			wsConnection.CancelFunc()
 			return
 		}
 

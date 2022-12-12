@@ -4,14 +4,16 @@ server:
   pubsub:
     provider: redis
 routes:
-  - endpoint: "/api/ws/customers/:customerId/orders/:orderId/updates"
+  - endpoint: "/orders/:id/events"
     topics:
-      - "/customers/:customerId/orders/:orderId/updates"
+      - "/orders/:id/events"
     plugins:
       middleware:
-        - "./plugins/authenticateCustomerPlugin.so"
-      message-enrichment:
-        - "./plugins/enrichOrderUpdate.so"
+        - "./plugins/auth.so"
+  
+  - endpoint: "/api/ws/test"
+    topics:
+      - "/orders/:id/events"
 
   - endpoint: "/api/ws/customers/:customerId/notifications"
     topics:
