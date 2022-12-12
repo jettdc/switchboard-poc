@@ -7,6 +7,7 @@ require (
 	github.com/gin-contrib/zap v0.1.0
 	github.com/gin-gonic/autotls v0.0.5
 	github.com/gin-gonic/gin v1.8.1
+	github.com/go-playground/assert/v2 v2.0.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0

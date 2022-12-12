@@ -11,7 +11,6 @@ import (
 
 func NewRoutePipeline(route config.RouteConfig, pubsubClient pubsub.PubSub) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		// Run middleware
 		var err error
 		if route.Plugins != nil {

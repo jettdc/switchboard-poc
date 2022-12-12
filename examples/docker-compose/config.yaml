@@ -15,12 +15,9 @@ routes:
     topics:
       - "/orders/:id/events"
 
-  - endpoint: '/api/ws/cool-endpoint/:id/orders'
+  - endpoint: "/api/ws/customers/:customerId/notifications"
     topics:
-      - "/cool-topic/:id/orders"
+      - "/customers/:customerId/notifications"
     plugins:
       middleware:
-        - "./plugins/auth.so"
-        - "./plugins/awesome-middleware.so"
-      message-enrichment:
-        - "./plugins/enrich-pizza.so"
+        - "./plugins/authenticateCustomerPlugin.so"

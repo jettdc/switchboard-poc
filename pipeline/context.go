@@ -91,6 +91,7 @@ func (p *PipeContext) listenOnTopic(topic string) error {
 					msg,
 					nil,
 				}
+				// TODO: Enrich message
 				p.AllMessages <- toForward
 			case <-p.Ctx.Done():
 				return

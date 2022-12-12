@@ -21,6 +21,8 @@ services:
     volumes:
       - ./config.yaml:/switchboard/config.yaml
       - ./plugins:/switchboard/plugins
+    depends_on:
+      - redis
   redis:
     image: "redis:latest"
     ports:
