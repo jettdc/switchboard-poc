@@ -142,6 +142,8 @@ var MiddlewarePlugin myPluginName
 Compile the plugin to produce the .so file (i.e. `myPlugin.so`) that can then be referenced from `config.yaml`:
 `go build -buildmode=plugin -o myPlugin.so myPlugin.go`
 
+**Note**: your plugin must be compiled for the system it will run on -- Switchboard is currently built on Alpine Linux. See the [example app](examples/README.md#compiling-for-alpine) for how to compile Go plugins for Alpine.
+
 ### Manual Testing
 - [Download insomnia](https://insomnia.rest/download) (or postman, but insomnia is a bit more lightweight and simple)
 - On the left panel, click the +, then select "Websocket Connection"
@@ -155,10 +157,5 @@ Compile the plugin to produce the .so file (i.e. `myPlugin.so`) that can then be
 - Secure websockets
 - Health check
 
-## Backend Services
-### Setup
-### Running
-
-## Frontend
-### Setup
-### Running
+### Example App: Piazza Shop
+See the demo [README.md](examples/README.md).
